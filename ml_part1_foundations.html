@@ -1,0 +1,1758 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Machine Learning — Part 1: Foundations & Supervised Learning</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Clash+Display:wght@400;500;600;700&family=Epilogue:ital,wght@0,300;0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  --bg: #09090f;
+  --s1: #111118;
+  --s2: #18181f;
+  --s3: #202028;
+  --border: #2a2a38;
+  --border2: #353545;
+  --ink: #eeeef5;
+  --ink2: #b8b8cc;
+  --muted: #6b6b85;
+  --blue:   #3b82f6;
+  --green:  #22c55e;
+  --amber:  #f59e0b;
+  --red:    #ef4444;
+  --purple: #a855f7;
+  --teal:   #14b8a6;
+  --pink:   #ec4899;
+  --b-soft: rgba(59,130,246,0.12);
+  --g-soft: rgba(34,197,94,0.12);
+  --a-soft: rgba(245,158,11,0.12);
+  --r-soft: rgba(239,68,68,0.12);
+  --p-soft: rgba(168,85,247,0.12);
+  --t-soft: rgba(20,184,166,0.12);
+}
+
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:'Epilogue',sans-serif;
+  font-size:15.5px;
+  line-height:1.8;
+}
+
+/* HERO */
+.hero{
+  background: linear-gradient(135deg,#0a0a14 0%,#0f0f20 50%,#080814 100%);
+  border-bottom:1px solid var(--border);
+  padding:60px 52px 52px;
+  position:relative;
+  overflow:hidden;
+}
+.hero::before{
+  content:'';
+  position:absolute;inset:0;
+  background: radial-gradient(ellipse 60% 70% at 80% 40%, rgba(59,130,246,0.06) 0%, transparent 70%),
+              radial-gradient(ellipse 40% 50% at 20% 80%, rgba(168,85,247,0.05) 0%, transparent 60%);
+  pointer-events:none;
+}
+.hero-tag{
+  font-family:'JetBrains Mono',monospace;
+  font-size:11px; color:var(--blue);
+  letter-spacing:0.2em; text-transform:uppercase;
+  margin-bottom:16px;
+}
+.hero h1{
+  font-family:'Clash Display',sans-serif;
+  font-size:54px; font-weight:700;
+  line-height:1.05; color:#fff;
+  max-width:700px;
+}
+.hero h1 span{
+  background: linear-gradient(135deg,var(--blue),var(--purple));
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.hero-desc{color:var(--ink2);max-width:560px;font-size:16px;font-weight:300;margin-top:16px;}
+.hero-chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:24px;}
+.chip{
+  background:rgba(255,255,255,0.05);
+  border:1px solid var(--border2);
+  border-radius:20px;
+  padding:5px 14px;
+  font-family:'JetBrains Mono',monospace;
+  font-size:11.5px; color:var(--ink2);
+}
+
+/* NAV */
+.nav{
+  background:var(--s1);
+  border-bottom:1px solid var(--border);
+  display:flex; gap:0;
+  overflow-x:auto;
+  padding:0 52px;
+}
+.nav-btn{
+  font-family:'JetBrains Mono',monospace;
+  font-size:11.5px; letter-spacing:0.04em;
+  padding:14px 18px;
+  background:transparent;
+  color:var(--muted);
+  border:none; border-bottom:3px solid transparent;
+  cursor:pointer; white-space:nowrap;
+  transition:all 0.2s;
+  margin-bottom:-1px;
+}
+.nav-btn:hover{color:var(--ink);}
+.nav-btn.active{color:var(--blue);border-bottom-color:var(--blue);}
+
+/* PANELS */
+.panel{display:none;padding:52px;max-width:1160px;}
+.panel.active{display:block;}
+
+/* SECTION HEADER */
+.sh-tag{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:0.18em;text-transform:uppercase;margin-bottom:10px;}
+.sh-title{font-family:'Clash Display',sans-serif;font-size:38px;font-weight:700;color:#fff;line-height:1.1;margin-bottom:8px;}
+.sh-title span{color:var(--blue);}
+.sh-desc{color:var(--ink2);font-size:16px;font-weight:300;max-width:680px;margin-bottom:40px;}
+
+/* CARDS */
+.card{
+  background:var(--s1);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:36px 38px;
+  margin-bottom:24px;
+}
+.card.blue-border{border-left:3px solid var(--blue);}
+.card.green-border{border-left:3px solid var(--green);}
+.card.amber-border{border-left:3px solid var(--amber);}
+.card.red-border{border-left:3px solid var(--red);}
+.card.purple-border{border-left:3px solid var(--purple);}
+.card.teal-border{border-left:3px solid var(--teal);}
+
+.card-title{
+  font-family:'Clash Display',sans-serif;
+  font-size:22px;font-weight:600;
+  color:#fff;margin-bottom:14px;
+  display:flex;align-items:center;gap:10px;
+}
+
+/* ANALOGY */
+.analogy{
+  background:rgba(245,158,11,0.07);
+  border:1px solid rgba(245,158,11,0.2);
+  border-left:4px solid var(--amber);
+  border-radius:10px;
+  padding:20px 24px;
+  margin:18px 0;
+}
+.analogy-tag{
+  font-family:'JetBrains Mono',monospace;
+  font-size:10px;color:var(--amber);
+  text-transform:uppercase;letter-spacing:0.15em;
+  margin-bottom:8px;
+}
+.analogy p{color:var(--ink2);font-size:15px;}
+
+/* FORMULA */
+.formula{
+  background:#0d1520;
+  border:1px solid #1e3a5f;
+  border-left:3px solid var(--blue);
+  border-radius:10px;
+  padding:18px 22px;
+  font-family:'JetBrains Mono',monospace;
+  font-size:13.5px;
+  color:#9ecbff;
+  line-height:2;
+  margin:16px 0;
+}
+.formula .cm{color:#4a6e90;font-size:12px;}
+.formula .hl{color:#ffd700;}
+.formula.green{background:#0a1a0f;border-color:#1a4a2a;border-left-color:var(--green);color:#86efac;}
+.formula.green .cm{color:#2a5a3a;}
+.formula.purple{background:#130d1f;border-color:#2d1a4f;border-left-color:var(--purple);color:#d8b4fe;}
+.formula.amber{background:#1a1200;border-color:#3d2e00;border-left-color:var(--amber);color:#fde68a;}
+
+/* GRIDS */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+@media(max-width:820px){.g2,.g3,.g4{grid-template-columns:1fr;}}
+
+/* TILES */
+.tile{
+  background:var(--s2);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:22px 20px;
+}
+.tile-label{
+  font-family:'JetBrains Mono',monospace;
+  font-size:10px;color:var(--muted);
+  text-transform:uppercase;letter-spacing:0.12em;
+  margin-bottom:8px;
+}
+.tile-value{
+  font-family:'Clash Display',sans-serif;
+  font-size:32px;font-weight:700;
+  line-height:1;margin-bottom:8px;
+}
+
+/* STEPS */
+.steps{margin:18px 0;}
+.step{display:flex;gap:18px;padding:16px 0;border-bottom:1px solid var(--border);}
+.step:last-child{border-bottom:none;}
+.snum{
+  width:38px;height:38px;min-width:38px;
+  border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:500;
+}
+.snum.blue{background:rgba(59,130,246,0.2);color:var(--blue);border:1px solid rgba(59,130,246,0.3);}
+.snum.green{background:rgba(34,197,94,0.2);color:var(--green);border:1px solid rgba(34,197,94,0.3);}
+.snum.amber{background:rgba(245,158,11,0.2);color:var(--amber);border:1px solid rgba(245,158,11,0.3);}
+.snum.red{background:rgba(239,68,68,0.2);color:var(--red);border:1px solid rgba(239,68,68,0.3);}
+.snum.purple{background:rgba(168,85,247,0.2);color:var(--purple);border:1px solid rgba(168,85,247,0.3);}
+.snum.teal{background:rgba(20,184,166,0.2);color:var(--teal);border:1px solid rgba(20,184,166,0.3);}
+.sbody strong{display:block;color:#fff;margin-bottom:4px;font-size:15.5px;}
+.sbody p,.sbody li{color:var(--ink2);font-size:14.5px;}
+.sbody ul{padding-left:18px;margin-top:6px;}
+.sbody .detail{
+  background:var(--s2);border:1px solid var(--border);
+  border-radius:8px;padding:12px 16px;margin-top:10px;
+  font-size:14px;color:var(--ink2);
+}
+
+/* CALLOUTS */
+.callout{border-radius:10px;padding:18px 22px;margin:18px 0;}
+.callout-tag{font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.15em;margin-bottom:8px;}
+.callout p{font-size:14.5px;}
+.callout.warn{background:var(--r-soft);border:1px solid rgba(239,68,68,0.2);}.callout.warn .callout-tag{color:var(--red);}
+.callout.good{background:var(--g-soft);border:1px solid rgba(34,197,94,0.2);}.callout.good .callout-tag{color:var(--green);}
+.callout.info{background:var(--b-soft);border:1px solid rgba(59,130,246,0.2);}.callout.info .callout-tag{color:var(--blue);}
+.callout.tip{background:var(--a-soft);border:1px solid rgba(245,158,11,0.2);}.callout.tip .callout-tag{color:var(--amber);}
+.callout.purple{background:var(--p-soft);border:1px solid rgba(168,85,247,0.2);}.callout.purple .callout-tag{color:var(--purple);}
+
+/* CHART */
+.cw{background:var(--s2);border:1px solid var(--border);border-radius:12px;padding:24px;margin:18px 0;}
+.cw canvas{max-height:280px;}
+.clabel{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);text-align:center;margin-top:12px;line-height:1.5;}
+
+/* COMPARE TABLE */
+.tbl{width:100%;border-collapse:collapse;margin:16px 0;}
+.tbl th{background:var(--s3);color:var(--blue);padding:12px 16px;text-align:left;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.06em;text-transform:uppercase;border:1px solid var(--border);}
+.tbl td{padding:13px 16px;border:1px solid var(--border);font-size:14px;color:var(--ink2);vertical-align:top;}
+.tbl tr:hover td{background:var(--s2);}
+
+/* VERSUS */
+.versus{display:grid;grid-template-columns:1fr 60px 1fr;gap:16px;align-items:center;margin:18px 0;}
+.vs-mid{text-align:center;font-family:'Clash Display',sans-serif;font-size:22px;font-weight:700;color:var(--muted);}
+.vs-box{border-radius:12px;padding:22px;}
+.vs-box.wrong{background:var(--r-soft);border:1px solid rgba(239,68,68,0.2);}
+.vs-box.right{background:var(--g-soft);border:1px solid rgba(34,197,94,0.2);}
+.vs-tag{font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px;}
+.vs-box.wrong .vs-tag{color:var(--red);}
+.vs-box.right .vs-tag{color:var(--green);}
+.vs-box p{font-size:14px;color:var(--ink2);}
+
+/* QUOTE */
+.quote{
+  border-left:4px solid var(--purple);
+  padding:16px 22px;
+  background:var(--p-soft);
+  border-radius:0 10px 10px 0;
+  margin:18px 0;
+}
+.quote p{font-size:18px;font-style:italic;color:var(--ink);line-height:1.5;}
+.quote span{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);display:block;margin-top:8px;}
+
+/* TAGS */
+.tag{display:inline-block;padding:3px 11px;border-radius:20px;font-family:'JetBrains Mono',monospace;font-size:11px;margin:2px;}
+.tag-blue{background:var(--b-soft);color:var(--blue);border:1px solid rgba(59,130,246,0.25);}
+.tag-green{background:var(--g-soft);color:var(--green);border:1px solid rgba(34,197,94,0.25);}
+.tag-amber{background:var(--a-soft);color:var(--amber);border:1px solid rgba(245,158,11,0.25);}
+.tag-red{background:var(--r-soft);color:var(--red);border:1px solid rgba(239,68,68,0.25);}
+.tag-purple{background:var(--p-soft);color:var(--purple);border:1px solid rgba(168,85,247,0.25);}
+.tag-teal{background:var(--t-soft);color:var(--teal);border:1px solid rgba(20,184,166,0.25);}
+
+/* SLIDER */
+.sl-group{margin:14px 0;}
+.sl-label{display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);margin-bottom:6px;}
+.sl-label span{color:var(--blue);}
+input[type=range]{width:100%;accent-color:var(--blue);cursor:pointer;}
+
+/* RESULT BOX */
+.rbox{background:#0a1020;border:1px solid #1e3a5f;border-radius:12px;padding:22px 26px;margin-top:18px;font-family:'JetBrains Mono',monospace;font-size:13px;line-height:2;}
+.rbox .rl{color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:0.12em;}
+.rbox .rv{color:var(--blue);font-family:'Clash Display',sans-serif;font-size:26px;font-weight:700;}
+
+/* SEP */
+.sep{height:1px;background:var(--border);margin:28px 0;}
+
+p{color:var(--ink2);margin:8px 0;}
+strong{color:var(--ink);}
+em{color:var(--blue);font-style:italic;}
+ul,ol{padding-left:22px;color:var(--ink2);}
+li{margin:6px 0;}
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:var(--s1);}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-tag">🤖 Phase 2 · Machine Learning · Part 1 of 2</div>
+  <h1>Machine<br><span>Learning</span></h1>
+  <p class="hero-desc">The complete beginner's guide — from "what even is ML?" to advanced algorithms, all explained in plain English with real company examples. Every concept from Ace the Data Science Interview.</p>
+  <div class="hero-chips">
+    <span class="chip">🧠 What is ML?</span>
+    <span class="chip">⚖️ Bias vs Variance</span>
+    <span class="chip">📈 Linear Regression</span>
+    <span class="chip">🎯 Logistic Regression</span>
+    <span class="chip">🌳 Decision Trees</span>
+    <span class="chip">🌲 Random Forests</span>
+    <span class="chip">🚀 Gradient Boosting</span>
+  </div>
+</div>
+
+<!-- NAV -->
+<div class="nav">
+  <button class="nav-btn active" onclick="show('what')">01 · What is ML?</button>
+  <button class="nav-btn" onclick="show('types')">02 · Types of ML</button>
+  <button class="nav-btn" onclick="show('bv')">03 · Bias vs Variance</button>
+  <button class="nav-btn" onclick="show('overfit')">04 · Overfitting & Regularization</button>
+  <button class="nav-btn" onclick="show('linreg')">05 · Linear Regression</button>
+  <button class="nav-btn" onclick="show('logreg')">06 · Logistic Regression</button>
+  <button class="nav-btn" onclick="show('dtree')">07 · Decision Trees</button>
+  <button class="nav-btn" onclick="show('rf')">08 · Random Forests</button>
+  <button class="nav-btn" onclick="show('boost')">09 · Gradient Boosting</button>
+  <button class="nav-btn" onclick="show('eval')">10 · Model Evaluation</button>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- PANEL 01: WHAT IS ML -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div id="panel-what" class="panel active">
+  <div class="sh-tag">Machine Learning · Foundation</div>
+  <div class="sh-title">What is Machine <span>Learning</span>?</div>
+  <div class="sh-desc">Before any algorithm, before any formula — you need to understand what machine learning actually is and why it exists. Start here.</div>
+
+  <div class="card blue-border">
+    <div class="card-title">The Old Way vs The Machine Learning Way</div>
+    <p>Before machine learning, if you wanted a computer to do something — like detect spam emails — you had to write out every single rule manually:</p>
+    <div class="formula amber">
+      <span class="cm">// Old approach: manually written rules</span><br>
+      IF email contains "FREE MONEY" → spam<br>
+      IF email contains "CLICK HERE NOW" → spam<br>
+      IF email contains "Nigerian prince" → spam<br>
+      <span class="cm">// ...and 10,000 more rules you'd have to think of yourself</span>
+    </div>
+    <p>This breaks the moment spammers change their language. You'd need to update your rules constantly. And what about the subtler cases — emails that aren't obviously spam but feel off?</p>
+
+    <div class="analogy">
+      <div class="analogy-tag">👶 Analogy — Teaching a Child vs Giving Instructions</div>
+      <p>Imagine teaching a child to recognize dogs. You could write a rulebook: "Four legs, fur, barks, tail that wags..." But what about a Chihuahua vs a Great Dane? A dog wearing a costume? A wolf?</p>
+      <p style="margin-top:8px;">Instead, you just show the child thousands of pictures — "dog, dog, not dog, dog, not dog" — and their brain learns the pattern automatically. That's machine learning. <strong>You show it examples and it figures out the rules itself.</strong></p>
+    </div>
+
+    <div class="formula">
+      <span class="cm">// Machine learning approach</span><br>
+      <span class="hl">Input:</span>  Thousands of emails labeled "spam" or "not spam"<br>
+      <span class="hl">Process:</span> Algorithm finds patterns automatically<br>
+      <span class="hl">Output:</span> A model that can classify NEW emails it's never seen<br><br>
+      <span class="cm">// The key insight: the computer LEARNS from data, not hard-coded rules</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">The Formal Definition — In Plain English</div>
+    <div class="quote">
+      <p>"Machine learning is the field of study that gives computers the ability to learn without being explicitly programmed."</p>
+      <span>— Arthur Samuel, 1959 (the man who coined the term)</span>
+    </div>
+    <p>More practically: ML is a set of techniques that allow computers to <strong>find patterns in data</strong> and use those patterns to <strong>make predictions or decisions</strong> on new, unseen data.</p>
+    <p>Three ingredients you always need:</p>
+    <div class="g3" style="margin-top:16px;">
+      <div class="tile">
+        <div class="tile-label">Ingredient 1</div>
+        <div class="tile-value" style="font-size:22px;color:var(--blue);">Data</div>
+        <p style="font-size:13.5px;margin-top:6px;">Historical examples the model learns from. More data = better model (usually). Garbage in = garbage out.</p>
+      </div>
+      <div class="tile">
+        <div class="tile-label">Ingredient 2</div>
+        <div class="tile-value" style="font-size:22px;color:var(--green);">Algorithm</div>
+        <p style="font-size:13.5px;margin-top:6px;">The mathematical procedure that analyzes the data and finds patterns. Examples: linear regression, random forest, neural network.</p>
+      </div>
+      <div class="tile">
+        <div class="tile-label">Ingredient 3</div>
+        <div class="tile-value" style="font-size:22px;color:var(--amber);">Model</div>
+        <p style="font-size:13.5px;margin-top:6px;">The output of training — a learned function that takes new inputs and produces predictions. This is what gets deployed to production.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">The ML Pipeline — How It Actually Works End-to-End</div>
+    <p>Every ML project follows roughly the same journey, from raw data to deployed predictions:</p>
+    <div class="steps">
+      <div class="step">
+        <div class="snum blue">1</div>
+        <div class="sbody">
+          <strong>Collect & Clean Data</strong>
+          <p>Raw data is messy — missing values, duplicates, wrong formats. This step is unglamorous but critical. In practice, data scientists spend 60–80% of their time here. "Garbage in, garbage out" is the most important rule in ML.</p>
+          <div class="detail">🏦 <strong>Example:</strong> Predicting loan default. Raw data has missing income values, some salaries entered in monthly instead of annual, address typos. All must be fixed before the model sees it.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="snum green">2</div>
+        <div class="sbody">
+          <strong>Feature Engineering</strong>
+          <p>Turn raw data into features (inputs) that the model can understand. This requires creativity and domain knowledge. Often the difference between a mediocre and great model.</p>
+          <div class="detail">🚗 <strong>Example (Uber):</strong> Instead of raw timestamp, create features like "is_rush_hour", "day_of_week", "days_until_holiday". These engineered features help the model learn faster.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="snum amber">3</div>
+        <div class="sbody">
+          <strong>Choose & Train a Model</strong>
+          <p>Select which algorithm to use, feed it the training data, and let it learn. The algorithm adjusts its internal parameters to minimize prediction error. This is the "learning" part.</p>
+          <div class="detail">You don't always pick the fanciest model. Sometimes linear regression beats neural networks. Choose based on: data size, interpretability needs, compute budget, and problem type.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="snum red">4</div>
+        <div class="sbody">
+          <strong>Evaluate the Model</strong>
+          <p>Test on data the model has NEVER seen. How well does it perform? Use the right metrics for the problem: accuracy, precision, recall, RMSE, AUC-ROC, etc. This is where you catch overfitting.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="snum purple">5</div>
+        <div class="sbody">
+          <strong>Deploy & Monitor</strong>
+          <p>Ship the model to production where it makes real predictions. Then continuously monitor — data distributions shift over time (called "data drift") and model performance degrades. Retraining is a continuous process.</p>
+          <div class="detail">🎵 <strong>Spotify example:</strong> Their recommendation model trained on 2020 data won't know anything about songs released in 2023. Regular retraining keeps it fresh.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Why Does ML Matter for Interviews?</div>
+    <div class="g2">
+      <div class="tile" style="border-top:3px solid var(--blue);">
+        <div class="tile-label">Product DS Roles</div>
+        <p style="font-size:14px;margin-top:6px;">Focus on understanding algorithms conceptually, knowing when to use which model, and thinking about ML systems at a product level. Less math, more intuition.</p>
+      </div>
+      <div class="tile" style="border-top:3px solid var(--purple);">
+        <div class="tile-label">ML Engineering Roles</div>
+        <p style="font-size:14px;margin-top:6px;">Expect deeper math — deriving gradient descent, backpropagation, optimization theory. May ask you to code algorithms from scratch. Heavier on linear algebra and calculus.</p>
+      </div>
+    </div>
+    <div class="callout info" style="margin-top:18px;">
+      <div class="callout-tag">💡 Interview Strategy</div>
+      <p>For most DS roles: know the intuition behind every major algorithm, know when to use each one, know their trade-offs, and know how to evaluate them. You don't need to memorize every mathematical derivation — but you should be able to explain any algorithm to a non-technical stakeholder in plain English.</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- PANEL 02: TYPES OF ML -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div id="panel-types" class="panel">
+  <div class="sh-tag">Machine Learning · Foundation</div>
+  <div class="sh-title">The Three <span>Types</span> of ML</div>
+  <div class="sh-desc">Machine learning isn't one thing — it's a family of approaches. Every interview question will fall into one of these three categories.</div>
+
+  <div class="card blue-border">
+    <div class="card-title">🎓 Type 1: Supervised Learning</div>
+    <p><strong>The concept:</strong> You have <em>labeled training data</em> — examples where you know the correct answer. The model learns to map inputs to outputs by studying these labeled examples, then applies what it learned to new, unlabeled data.</p>
+
+    <div class="analogy">
+      <div class="analogy-tag">📚 Analogy — Learning with a Teacher</div>
+      <p>Imagine learning to identify paintings by era. A teacher shows you 1,000 paintings and tells you: "This one is Renaissance. This is Baroque. This is Modern." You study these labeled examples until you can correctly classify new paintings you've never seen.</p>
+      <p style="margin-top:8px;">The "label" is the teacher's answer. In ML, labels are things like: spam/not spam, price of a house, whether a patient has cancer, whether a loan will default.</p>
+    </div>
+
+    <div class="g2" style="margin-top:18px;">
+      <div>
+        <p><strong style="color:var(--blue);">Regression</strong> — Predicting a continuous number</p>
+        <ul style="margin-top:8px;">
+          <li>House price prediction (output: $450,000)</li>
+          <li>Uber ETA prediction (output: 12 minutes)</li>
+          <li>Stock price forecasting (output: $142.30)</li>
+          <li>Temperature prediction (output: 72°F)</li>
+        </ul>
+      </div>
+      <div>
+        <p><strong style="color:var(--green);">Classification</strong> — Predicting a category/class</p>
+        <ul style="margin-top:8px;">
+          <li>Spam detection (output: spam / not spam)</li>
+          <li>Cancer diagnosis (output: malignant / benign)</li>
+          <li>Loan approval (output: approve / reject)</li>
+          <li>Image recognition (output: cat / dog / bird)</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <div class="callout-tag">🎯 Interview Quick Rule</div>
+      <p>If the output is a number on a continuous scale → Regression. If the output is one of a fixed set of categories → Classification. Simple, but interviewers confirm you know this cold.</p>
+    </div>
+  </div>
+
+  <div class="card green-border">
+    <div class="card-title">🔍 Type 2: Unsupervised Learning</div>
+    <p><strong>The concept:</strong> You have data with <em>no labels</em>. The algorithm finds hidden structure and patterns in the data on its own. There's no "right answer" — the model discovers groupings, relationships, or compressed representations.</p>
+
+    <div class="analogy">
+      <div class="analogy-tag">🎵 Analogy — Sorting Songs Without Genre Labels</div>
+      <p>Imagine Spotify gives you 10 million songs with no genre labels. You can analyze the songs' audio features — tempo, energy, acousticness, danceability — and group similar-sounding songs together automatically. You didn't tell the algorithm what "pop" or "jazz" is — it discovered natural groupings on its own.</p>
+    </div>
+
+    <div class="g3" style="margin-top:16px;">
+      <div class="tile">
+        <div class="tile-label">Clustering</div>
+        <p style="font-size:13.5px;margin-top:6px;">Group similar data points together. Example: Segment customers into "budget shoppers", "luxury buyers", "deal hunters" based on purchase history.</p>
+        <div style="margin-top:8px;"><span class="tag tag-green">K-Means</span><span class="tag tag-green">DBSCAN</span></div>
+      </div>
+      <div class="tile">
+        <div class="tile-label">Dimensionality Reduction</div>
+        <p style="font-size:13.5px;margin-top:6px;">Compress data with many features into fewer dimensions while preserving important patterns. Used for visualization and as preprocessing for other models.</p>
+        <div style="margin-top:8px;"><span class="tag tag-blue">PCA</span><span class="tag tag-blue">t-SNE</span></div>
+      </div>
+      <div class="tile">
+        <div class="tile-label">Anomaly Detection</div>
+        <p style="font-size:13.5px;margin-top:6px;">Find unusual data points that don't fit the normal patterns. Example: Credit card fraud detection — identify transactions that look nothing like a user's normal behavior.</p>
+        <div style="margin-top:8px;"><span class="tag tag-amber">Isolation Forest</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card amber-border">
+    <div class="card-title">🎮 Type 3: Reinforcement Learning</div>
+    <p><strong>The concept:</strong> An agent learns by <em>interacting with an environment</em>. It takes actions, receives rewards or penalties, and gradually learns which actions maximize long-term reward. No labeled data — it learns by trial and error.</p>
+
+    <div class="analogy">
+      <div class="analogy-tag">🐕 Analogy — Training a Dog</div>
+      <p>You don't give a dog a textbook explaining how to sit. You say "sit", the dog tries different things, and when it sits correctly — you give it a treat (reward). Wrong action — no treat (penalty). Over thousands of repetitions, the dog learns: sitting = treat = good. That's reinforcement learning.</p>
+    </div>
+
+    <div class="g2" style="margin-top:16px;">
+      <div class="tile">
+        <div class="tile-label">Where RL Shines</div>
+        <ul style="font-size:14px;margin-top:8px;">
+          <li>Game playing (AlphaGo, chess, Starcraft)</li>
+          <li>Robotics (teaching robots to walk)</li>
+          <li>Self-driving cars</li>
+          <li>Trading algorithms</li>
+        </ul>
+      </div>
+      <div class="tile">
+        <div class="tile-label">Interview Relevance</div>
+        <p style="font-size:14px;margin-top:6px;">RL rarely appears in standard DS interviews unless you explicitly have it on your resume. For most roles, knowing it exists and its high-level concept is sufficient. Don't spend too much prep time here.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">The Big Picture — Side by Side</div>
+    <table class="tbl">
+      <thead><tr><th>Aspect</th><th>Supervised</th><th>Unsupervised</th><th>Reinforcement</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Has labels?</strong></td><td style="color:var(--green);">Yes — knows correct answer</td><td style="color:var(--red);">No — discovers patterns</td><td style="color:var(--amber);">No labels, but has rewards</td></tr>
+        <tr><td><strong>Goal</strong></td><td>Predict output for new inputs</td><td>Find hidden structure in data</td><td>Maximize cumulative reward</td></tr>
+        <tr><td><strong>Examples</strong></td><td>Spam detection, house price, fraud</td><td>Customer segmentation, PCA, anomaly detection</td><td>AlphaGo, robot locomotion</td></tr>
+        <tr><td><strong>Algorithms</strong></td><td>Linear regression, random forest, neural nets</td><td>K-means, PCA, autoencoders</td><td>Q-learning, PPO, A3C</td></tr>
+        <tr><td><strong>Interview weight</strong></td><td style="color:var(--green);">⭐⭐⭐⭐⭐ Very high</td><td style="color:var(--amber);">⭐⭐⭐ Medium</td><td style="color:var(--muted);">⭐ Low (unless on resume)</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- PANEL 03: BIAS VS VARIANCE -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div id="panel-bv" class="panel">
+  <div class="sh-tag">Machine Learning · Core Concept</div>
+  <div class="sh-title">The Bias-Variance <span>Trade-off</span></div>
+  <div class="sh-desc">The single most important theoretical concept in all of machine learning. Every interview will touch this. Every model decision involves this trade-off.</div>
+
+  <div class="card blue-border">
+    <div class="card-title">The Fundamental Problem: You Can't Be Perfect</div>
+    <p>Every machine learning model makes errors. No model is perfect. But understanding <em>where</em> those errors come from is what separates mediocre ML practitioners from great ones.</p>
+    <p>The total error of any model can be broken into exactly three sources:</p>
+
+    <div class="formula">
+      <span class="cm">// The fundamental decomposition of model error</span><br>
+      Total Error = <span class="hl">Bias²</span>  +  <span class="hl">Variance</span>  +  <span class="hl">Irreducible Noise</span><br><br>
+      <span class="cm">// Bias: how wrong is your model on average?</span><br>
+      <span class="cm">// Variance: how much does your model fluctuate across different training sets?</span><br>
+      <span class="cm">// Irreducible noise: error you can't remove — inherent randomness in data</span>
+    </div>
+
+    <div class="analogy">
+      <div class="analogy-tag">🎯 Analogy — The Archery Target</div>
+      <p>Imagine four archers shooting at a bullseye. This perfectly illustrates bias vs variance:</p>
+      <p style="margin-top:8px;"><strong style="color:var(--red);">High Bias, Low Variance:</strong> Every arrow lands in the same place — but it's consistently far from the bullseye. The archer is consistent but wrong. (Like a model that always predicts "average house price" regardless of features.)</p>
+      <p style="margin-top:8px;"><strong style="color:var(--amber);">Low Bias, High Variance:</strong> Arrows are scattered all over the target — sometimes close, sometimes far. The archer is inconsistent. (Like a model that fits training data perfectly but makes wildly different predictions for similar inputs.)</p>
+      <p style="margin-top:8px;"><strong style="color:var(--green);">Low Bias, Low Variance:</strong> Arrows clustered tightly around the bullseye. This is the goal. Hard to achieve in practice.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Bias — Deep Dive</div>
+    <p><strong>Bias</strong> is the error from <em>wrong assumptions in the learning algorithm</em>. A biased model is too simple — it misses the true relationship in the data.</p>
+
+    <div class="g2">
+      <div>
+        <p><strong>What causes high bias?</strong></p>
+        <ul style="margin-top:8px;">
+          <li>Using a model that's too simple for the problem</li>
+          <li>Missing important features</li>
+          <li>Assuming linearity when the relationship is curved</li>
+          <li>Under-training (stopping too early)</li>
+        </ul>
+        <p style="margin-top:14px;"><strong>Signs of high bias in practice:</strong></p>
+        <ul style="margin-top:8px;">
+          <li>High training error AND high test error</li>
+          <li>Model performs poorly on data it was trained on</li>
+          <li>Adding more data doesn't help much</li>
+        </ul>
+        <div class="callout warn" style="margin-top:14px;">
+          <div class="callout-tag">⚠️ Called "Underfitting"</div>
+          <p>A high-bias model underfits — it's too simple to capture the true pattern. Like trying to fit a curve with a straight line.</p>
+        </div>
+      </div>
+      <div>
+        <div class="cw" style="margin:0;">
+          <canvas id="biasChart" style="max-height:240px;"></canvas>
+          <div class="clabel">High Bias: Linear model trying to fit curved data.<br>The model misses the true relationship entirely.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout tip" style="margin-top:16px;">
+      <div class="callout-tag">🎯 Interview Answer: How to Fix High Bias</div>
+      <p>"High bias means the model is too simple. I'd try: (1) Use a more complex model — move from linear regression to a polynomial or tree-based model, (2) Add more relevant features to give the model more information to work with, (3) Reduce regularization — L1/L2 penalties can over-constrain the model."</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Variance — Deep Dive</div>
+    <p><strong>Variance</strong> is the error from <em>sensitivity to fluctuations in the training data</em>. A high-variance model learns the training data too well — including its noise and quirks — and fails to generalize.</p>
+
+    <div class="g2">
+      <div>
+        <p><strong>What causes high variance?</strong></p>
+        <ul style="margin-top:8px;">
+          <li>Using a model that's too complex</li>
+          <li>Too few training examples</li>
+          <li>Too many features relative to data points</li>
+          <li>No regularization to constrain the model</li>
+          <li>Training too long (too many epochs)</li>
+        </ul>
+        <p style="margin-top:14px;"><strong>Signs of high variance in practice:</strong></p>
+        <ul style="margin-top:8px;">
+          <li>Very low training error but high test error</li>
+          <li>Large gap between training and validation performance</li>
+          <li>Model performs drastically differently on slight variations of the same data</li>
+        </ul>
+      </div>
+      <div>
+        <div class="cw" style="margin:0;">
+          <canvas id="varianceChart" style="max-height:240px;"></canvas>
+          <div class="clabel">High Variance: Complex model memorizes training points (blue dots)<br>but fails wildly on new test data.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <div class="callout-tag">⚠️ Called "Overfitting"</div>
+      <p>A high-variance model overfits — it memorized the training data too well, including random noise. Imagine a student who memorizes every practice exam answer verbatim but can't solve new variations of the same problem.</p>
+    </div>
+
+    <div class="callout tip">
+      <div class="callout-tag">🎯 Interview Answer: How to Fix High Variance</div>
+      <p>"High variance means the model is overfitting. I'd try: (1) Get more training data — the most reliable fix, (2) Add regularization (L1/L2) to penalize complexity, (3) Reduce model complexity — fewer layers, shallower trees, (4) Use dropout in neural networks, (5) Apply cross-validation to get an honest estimate of generalization."</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">The Trade-off — Why You Can't Win Both</div>
+    <p>Here's the frustrating reality: <strong>reducing bias typically increases variance, and vice versa.</strong> Making your model more complex lets it fit the data better (lower bias) — but it becomes more sensitive to the specific training data it saw (higher variance).</p>
+
+    <div class="cw">
+      <canvas id="bvTradeoff" style="max-height:260px;"></canvas>
+      <div class="clabel">The classic bias-variance trade-off curve. Total error is minimized at the sweet spot<br>where the model is complex enough but not too complex.</div>
+    </div>
+
+    <div class="g3" style="margin-top:20px;">
+      <div class="tile" style="border-top:3px solid var(--red);">
+        <div class="tile-label">Too Simple → High Bias</div>
+        <p style="font-size:13.5px;margin-top:6px;">Linear regression on a wildly non-linear problem. Consistently wrong. Underfitting.</p>
+      </div>
+      <div class="tile" style="border-top:3px solid var(--green);">
+        <div class="tile-label">Just Right → Sweet Spot</div>
+        <p style="font-size:13.5px;margin-top:6px;">Model complexity matches problem complexity. Low bias AND acceptable variance. The goal.</p>
+      </div>
+      <div class="tile" style="border-top:3px solid var(--amber);">
+        <div class="tile-label">Too Complex → High Variance</div>
+        <p style="font-size:13.5px;margin-top:6px;">100-layer neural net on a 500-row dataset. Memorizes noise. Overfitting. Fails on new data.</p>
+      </div>
+    </div>
+
+    <div class="callout info" style="margin-top:18px;">
+      <div class="callout-tag">💡 Facebook Interview Question (from your book)</div>
+      <p><strong>"What is the bias-variance trade-off? How is it expressed as an equation?"</strong></p>
+      <p style="margin-top:10px;"><strong>Model answer:</strong> "Total model error = Bias² + Variance + Irreducible Error. Bias is error from wrong assumptions — when the model is too simple to capture the true pattern. Variance is error from sensitivity to training data — when the model is too complex and memorizes noise. As we make models more complex, bias decreases but variance increases. The optimal model sits at the sweet spot where total error is minimized."</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- PANEL 04: OVERFITTING & REGULARIZATION -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div id="panel-overfit" class="panel">
+  <div class="sh-tag">Machine Learning · Core Concept</div>
+  <div class="sh-title">Overfitting &amp; <span>Regularization</span></div>
+  <div class="sh-desc">The most common failure mode in ML and the primary tool to fight it. You will be asked about this in every single interview.</div>
+
+  <div class="card red-border">
+    <div class="card-title">What is Overfitting? — The Full Story</div>
+    <p>Overfitting is when your model learns the training data <em>too well</em> — it doesn't just learn the true underlying pattern, it also learns the random noise, the quirks, the outliers specific to your training set.</p>
+
+    <div class="analogy">
+      <div class="analogy-tag">📝 Analogy — The Student Who Memorizes Instead of Understanding</div>
+      <p>Imagine a student preparing for an exam. Instead of understanding the concepts, they memorize every single practice question and answer word-for-word. On the practice tests? Perfect score. On the actual exam with slightly different questions? They fail — because they can't apply the underlying concepts to new situations.</p>
+      <p style="margin-top:8px;">An overfitting model is that student. It memorized the training data but never learned the true pattern.</p>
+    </div>
+
+    <div class="cw">
+      <canvas id="overfitDemo" style="max-height:260px;"></canvas>
+      <div class="clabel">Three models on the same data. Underfitting (red line) misses the trend.<br>Overfitting (orange) hits every training point but would fail on new data. Good fit (green) captures the real pattern.</div>
+    </div>
+
+    <div class="g2" style="margin-top:18px;">
+      <div class="tile" style="border-left:3px solid var(--red);">
+        <div class="tile-label">Signs of Overfitting</div>
+        <ul style="font-size:13.5px;margin-top:8px;">
+          <li>Training accuracy: 99% 🎉</li>
+          <li>Test/validation accuracy: 65% 😬</li>
+          <li>Large gap between train and test performance</li>
+          <li>Model very sensitive to small data changes</li>
+          <li>Learning curves diverge (train improves, validation plateaus or worsens)</li>
+        </ul>
+      </div>
+      <div class="tile" style="border-left:3px solid var(--green);">
+        <div class="tile-label">How to Detect It</div>
+        <ul style="font-size:13.5px;margin-top:8px;">
+          <li>Always evaluate on a held-out test set</li>
+          <li>Use k-fold cross-validation for honest estimates</li>
+          <li>Plot learning curves (training vs validation error over time)</li>
+          <li>Check if performance degrades significantly on new data</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="card green-border">
+    <div class="card-title">Regularization — The Primary Fix</div>
+    <p>Regularization is a technique that <em>penalizes model complexity</em>. Instead of just minimizing prediction error, you also penalize the model for having large coefficients. This forces the model to stay simpler — which reduces overfitting.</p>
+
+    <div class="analogy">
+      <div class="analogy-tag">💰 Analogy — Paying a Tax for Being Complicated</div>
+      <p>Imagine the government taxes businesses that are overly complicated — the more complex your organizational structure, the more tax you pay. As a result, companies stay lean and efficient. Regularization is that tax for ML models — the model pays a "complexity penalty," so it only adds complexity when it genuinely helps with predictions.</p>
+    </div>
+
+    <div class="formula">
+      <span class="cm">// Without regularization: just minimize prediction error</span><br>
+      Loss = prediction_error(y, ŷ)<br><br>
+      <span class="cm">// With regularization: minimize error + penalize big weights</span><br>
+      Loss = prediction_error(y, ŷ) + <span class="hl">λ × penalty(weights)</span><br><br>
+      <span class="cm">// λ (lambda) controls regularization strength</span><br>
+      <span class="cm">// Higher λ = stronger penalty = simpler model = higher bias, lower variance</span><br>
+      <span class="cm">// Lower λ = weaker penalty = more complex model = lower bias, higher variance</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">L1 vs L2 — The Two Types of Regularization</div>
+    <p>There are two common regularization methods. They're similar in concept but have a crucial difference in what they do to model coefficients:</p>
+
+    <div class="g2" style="margin-top:16px;">
+      <div style="background:var(--b-soft);border:1px solid rgba(59,130,246,0.2);border-radius:12px;padding:24px;">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--blue);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px;">L1 Regularization — "Lasso"</div>
+        <div class="formula" style="margin-top:0;font-size:12.5px;">
+          Penalty = λ × Σ|βᵢ|<br>
+          <span class="cm">// Sum of ABSOLUTE VALUES of coefficients</span>
+        </div>
+        <p style="font-size:14px;margin-top:12px;"><strong style="color:var(--ink);">Key property:</strong> Pushes many coefficients all the way to <strong>exactly zero</strong>. This means it automatically performs <strong>feature selection</strong> — it kills off unimportant features entirely.</p>
+        <p style="font-size:14px;margin-top:8px;"><strong style="color:var(--ink);">Result:</strong> Sparse model with few active features. Great when you believe only a few features actually matter.</p>
+        <div style="margin-top:12px;"><span class="tag tag-blue">Feature selection</span><span class="tag tag-blue">Sparse models</span><span class="tag tag-blue">High-dimensional data</span></div>
+      </div>
+      <div style="background:var(--g-soft);border:1px solid rgba(34,197,94,0.2);border-radius:12px;padding:24px;">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--green);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px;">L2 Regularization — "Ridge"</div>
+        <div class="formula green" style="margin-top:0;font-size:12.5px;">
+          Penalty = λ × Σβᵢ²<br>
+          <span class="cm">// Sum of SQUARED values of coefficients</span>
+        </div>
+        <p style="font-size:14px;margin-top:12px;"><strong style="color:var(--ink);">Key property:</strong> Shrinks coefficients toward zero but <strong>rarely makes them exactly zero</strong>. All features stay in the model — just with smaller weights.</p>
+        <p style="font-size:14px;margin-top:8px;"><strong style="color:var(--ink);">Result:</strong> Dense model where all features contribute a little. Great when you believe many features are relevant but none dominates.</p>
+        <div style="margin-top:12px;"><span class="tag tag-green">Keeps all features</span><span class="tag tag-green">Handles multicollinearity</span><span class="tag tag-green">Smooth shrinkage</span></div>
+      </div>
+    </div>
+
+    <table class="tbl" style="margin-top:20px;">
+      <thead><tr><th>Feature</th><th>L1 (Lasso)</th><th>L2 (Ridge)</th><th>Elastic Net</th></tr></thead>
+      <tbody>
+        <tr><td>Penalty term</td><td>Sum of |β|</td><td>Sum of β²</td><td>Combination of both</td></tr>
+        <tr><td>Can zero out coefficients?</td><td style="color:var(--green);">✅ Yes</td><td style="color:var(--red);">❌ Rarely</td><td style="color:var(--amber);">⚠️ Some</td></tr>
+        <tr><td>Feature selection?</td><td style="color:var(--green);">✅ Built-in</td><td style="color:var(--red);">❌ No</td><td style="color:var(--amber);">⚠️ Partial</td></tr>
+        <tr><td>Good for correlated features?</td><td style="color:var(--red);">❌ Picks one, drops others</td><td style="color:var(--green);">✅ Spreads weight between them</td><td style="color:var(--green);">✅ Yes</td></tr>
+        <tr><td>Use when</td><td>Many irrelevant features present</td><td>Most features are relevant</td><td>Unsure which type to use</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout tip">
+      <div class="callout-tag">🎯 Uber Interview Question (from your book)</div>
+      <p><strong>"What is L1 and L2 regularization? What are the differences?"</strong></p>
+      <p style="margin-top:10px;"><strong>Model answer:</strong> "Both add a penalty to the loss function to reduce overfitting. L1 (Lasso) penalizes the absolute value of coefficients — this can zero them out completely, making it useful for feature selection. L2 (Ridge) penalizes squared coefficients — this shrinks them toward zero but rarely eliminates them entirely. Use L1 when you think few features matter; use L2 when many features are relevant. Elastic net combines both."</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- PANEL 05: LINEAR REGRESSION -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div id="panel-linreg" class="panel">
+  <div class="sh-tag">Supervised Learning · Regression</div>
+  <div class="sh-title">Linear <span>Regression</span></div>
+  <div class="sh-desc">The foundation of all of ML. Deceptively simple, endlessly powerful. Every interview covers this — and interviewers probe much deeper than just "what is it".</div>
+
+  <div class="card blue-border">
+    <div class="card-title">The Core Idea — In Complete Plain English</div>
+    <p>Imagine you're trying to predict house prices. You look at a dataset of past sales: 500 houses, each with features like size (sq ft), number of bedrooms, location. You notice a pattern — bigger houses tend to cost more.</p>
+    <p>Linear regression says: <strong>let's draw the best possible straight line (or hyperplane in multiple dimensions) through this data</strong>, and use that line to predict prices for new houses.</p>
+
+    <div class="analogy">
+      <div class="analogy-tag">📏 Analogy — The Line of Best Fit</div>
+      <p>Think of plotting houses on a graph: x-axis = size in sq ft, y-axis = price. You have 500 dots scattered across the graph. Linear regression finds the ONE straight line that gets as close as possible to as many dots as possible.</p>
+      <p style="margin-top:8px;">For a new house that hasn't sold yet, you plug its size into the line and read off the predicted price. That's it. That's linear regression.</p>
+    </div>
+
+    <div class="cw">
+      <canvas id="linregChart" style="max-height:260px;"></canvas>
+      <div class="clabel">Linear regression: the blue line minimizes the total squared distance to all data points.<br>Red vertical lines = residuals (prediction errors for each point).</div>
+    </div>
+
+    <div class="formula">
+      <span class="cm">// Simple linear regression (one feature)</span><br>
+      ŷ = β₀ + β₁x<br><br>
+      <span class="cm">// Multiple linear regression (many features)</span><br>
+      ŷ = β₀ + β₁x₁ + β₂x₂ + ... + βₙxₙ<br><br>
+      <span class="cm">// Where:</span><br>
+      β₀ = intercept (predicted value when all x = 0)<br>
+      βᵢ = coefficient for feature i (how much y changes per unit increase in xᵢ)<br>
+      ŷ = predicted output
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">How Does It Learn? — Minimizing the RSS</div>
+    <p>The model learns by finding the coefficients (β values) that minimize prediction error across all training examples. The standard measure of error is the <strong>Residual Sum of Squares (RSS)</strong>.</p>
+
+    <div class="formula">
+      <span class="cm">// Residual = actual value - predicted value</span><br>
+      eᵢ = yᵢ − ŷᵢ<br><br>
+      <span class="cm">// RSS: sum of squared residuals across all n training examples</span><br>
+      RSS = Σᵢ(yᵢ − ŷᵢ)² = Σᵢ(yᵢ − β₀ − β₁xᵢ)²<br><br>
+      <span class="cm">// We square residuals for two reasons:</span><br>
+      <span class="cm">// 1. Positive and negative errors don't cancel out</span><br>
+      <span class="cm">// 2. Larger errors are penalized more heavily</span>
+    </div>
+
+    <p>The optimal β values that minimize RSS have a closed-form solution (unlike most ML algorithms, which require iterative optimization):</p>
+    <div class="formula purple">
+      β = (XᵀX)⁻¹ Xᵀy<br><br>
+      <span class="cm">// This is called the "Ordinary Least Squares" (OLS) solution</span><br>
+      <span class="cm">// For large datasets, gradient descent is used instead (cheaper computationally)</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Evaluation Metrics — How Good is Your Model?</div>
+    <div class="steps">
+      <div class="step">
+        <div class="snum blue">R²</div>
+        <div class="sbody">
+          <strong>R-Squared (Coefficient of Determination)</strong>
+          <p>Tells you: what percentage of the variance in y does your model explain? Ranges from 0 to 1. R²=0.85 means your model explains 85% of the variation in the target variable. R²=1.0 is perfect (and suspicious).</p>
+          <div class="detail" style="font-family:'JetBrains Mono',monospace;font-size:13px;">R² = 1 − RSS/TSS   where TSS = Σ(yᵢ − ȳ)²</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="snum green">MSE</div>
+        <div class="sbody">
+          <strong>Mean Squared Error</strong>
+          <p>Average of squared residuals. Units are squared (so dollars² for price prediction). Heavily penalizes large errors. Sensitive to outliers. Most common loss function used during training.</p>
+          <div class="detail" style="font-family:'JetBrains Mono',monospace;font-size:13px;">MSE = (1/n) × Σ(yᵢ − ŷᵢ)²</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="snum amber">MAE</div>
+        <div class="sbody">
+          <strong>Mean Absolute Error</strong>
+          <p>Average of absolute residuals. Same units as y (dollars for price prediction). Less sensitive to outliers than MSE. Easier to interpret but harder to optimize (not differentiable at 0).</p>
+          <div class="detail" style="font-family:'JetBrains Mono',monospace;font-size:13px;">MAE = (1/n) × Σ|yᵢ − ŷᵢ|</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <div class="callout-tag">🎯 When to Use MSE vs MAE</div>
+      <p><strong>Use MSE when:</strong> outliers are important signals (e.g., detecting extreme fraud amounts — those large errors matter!). <strong>Use MAE when:</strong> you want to be robust to outliers (e.g., predicting typical delivery times — occasional extreme delays shouldn't distort your evaluation).</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">The 5 Assumptions of Linear Regression — Must Know</div>
+    <p>Linear regression makes specific assumptions about the data. Violating them leads to wrong predictions and unreliable coefficient estimates. Interviewers test this regularly.</p>
+    <div class="steps">
+      <div class="step">
+        <div class="snum blue">1</div>
+        <div class="sbody">
+          <strong>Linearity</strong>
+          <p>The relationship between features and target is linear. If it's actually curved, linear regression will underfit. Fix: transform features (log, polynomial) or use a non-linear model.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="snum green">2</div>
+        <div class="sbody">
+          <strong>Independence of Errors</strong>
+          <p>Residuals are not correlated with each other. Violated in time-series data (tomorrow's error predicts today's). Fix: use time-series specific models (ARIMA, etc.).</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="snum amber">3</div>
+        <div class="sbody">
+          <strong>Homoscedasticity</strong>
+          <p>Variance of residuals is constant across all values of x. If errors get bigger for larger x values (heteroscedasticity), your model is unreliable. Fix: transform y with log, use weighted regression.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="snum red">4</div>
+        <div class="sbody">
+          <strong>Normality of Residuals</strong>
+          <p>Residuals should be approximately normally distributed. Important for statistical inference (p-values, confidence intervals on coefficients). Less critical if you only care about predictions.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="snum purple">5</div>
+        <div class="sbody">
+          <strong>No Multicollinearity</strong>
+          <p>Features should not be highly correlated with each other. If x₁ and x₂ are essentially the same variable, the model can't determine individual effects — coefficients become unstable and misleading. Fix: remove one correlated feature, combine them, or use PCA.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- PANEL 06: LOGISTIC REGRESSION -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div id="panel-logreg" class="panel">
+  <div class="sh-tag">Supervised Learning · Classification</div>
+  <div class="sh-title">Logistic <span>Regression</span></div>
+  <div class="sh-desc">Despite the name, logistic regression is a CLASSIFICATION algorithm. It's one of the most commonly used models in industry and a staple of every interview.</div>
+
+  <div class="card amber-border">
+    <div class="card-title">Wait — Why Can't We Just Use Linear Regression for Classification?</div>
+    <p>Great question. Let's say you're predicting loan default: yes or no. You try linear regression. Your output is a number — maybe -0.3 or 1.4 or 0.87. What does that mean? Is -0.3 "no default"? Is 1.4 "really definitely going to default"?</p>
+
+    <div class="versus" style="margin-top:16px;">
+      <div class="vs-box wrong">
+        <div class="vs-tag">❌ Linear Regression for Classification</div>
+        <p>Outputs any real number: -0.3, 1.7, 100, etc. What does it mean when you predict "1.8 probability" of fraud? Probabilities must be between 0 and 1. Linear regression breaks this constraint.</p>
+      </div>
+      <div class="vs-mid">→</div>
+      <div class="vs-box right">
+        <div class="vs-tag">✅ Logistic Regression</div>
+        <p>Always outputs a value between 0 and 1. You interpret it as a probability: "0.87 probability of fraud." Then apply a threshold (typically 0.5) to classify. Clean and interpretable.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card blue-border">
+    <div class="card-title">The Magic: The Sigmoid Function</div>
+    <p>Logistic regression takes the linear combination (just like linear regression) and passes it through a <strong>sigmoid function</strong> that squashes any real number into the range [0, 1]. This gives you a probability.</p>
+
+    <div class="formula">
+      <span class="cm">// Step 1: Compute the linear combination (like linear regression)</span><br>
+      z = β₀ + β₁x₁ + β₂x₂ + ... + βₙxₙ<br><br>
+      <span class="cm">// Step 2: Pass through sigmoid to get a probability</span><br>
+      P(y=1 | x) = σ(z) = <span class="hl">1 / (1 + e^(-z))</span><br><br>
+      <span class="cm">// Step 3: Apply threshold to classify</span><br>
+      IF P(y=1) ≥ 0.5 → predict class 1 (positive)<br>
+      IF P(y=1) &lt;  0.5 → predict class 0 (negative)
+    </div>
+
+    <div class="cw">
+      <canvas id="sigmoidChart" style="max-height:240px;"></canvas>
+      <div class="clabel">The sigmoid function: maps any real number to (0,1).<br>Large positive z → probability near 1. Large negative z → probability near 0. Around 0 → uncertain (50%).</div>
+    </div>
+
+    <div class="analogy">
+      <div class="analogy-tag">🌡️ Analogy — Converting Temperature to a "Hot Day" Probability</div>
+      <p>Imagine you want to predict "is today hot?" (yes/no). You measure temperature (any number). But you want a probability from 0 to 1. The sigmoid does this: 100°F → probability 0.99 (definitely hot). 70°F → probability 0.5 (borderline). 32°F → probability 0.01 (not hot). The S-curve captures human judgment naturally.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">How It Learns — Maximum Likelihood Estimation (MLE)</div>
+    <p>Unlike linear regression (which minimizes RSS), logistic regression learns by <strong>maximizing the likelihood</strong> of the training data. Intuitively: find the β values that make the training outcomes most probable given the model.</p>
+    <p>This is equivalent to minimizing the <strong>binary cross-entropy loss</strong>:</p>
+
+    <div class="formula purple">
+      Loss = −(1/n) × Σ[yᵢ log(ŷᵢ) + (1−yᵢ) log(1−ŷᵢ)]<br><br>
+      <span class="cm">// When actual label yᵢ = 1: penalize if predicted prob ŷᵢ is low</span><br>
+      <span class="cm">// When actual label yᵢ = 0: penalize if predicted prob ŷᵢ is high</span><br>
+      <span class="cm">// Minimized using gradient descent (no closed-form solution)</span>
+    </div>
+
+    <div class="callout info">
+      <div class="callout-tag">💡 Key Difference from Linear Regression</div>
+      <p>Linear regression has a closed-form solution (matrix algebra gives exact answer). Logistic regression has no closed form — you must use iterative optimization (gradient descent) to find the best parameters. This is why training logistic regression takes more time than linear regression.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Real-World Applications & Interview Framing</div>
+    <div class="g2">
+      <div class="tile" style="border-top:3px solid var(--blue);">
+        <div class="tile-label">Common Applications</div>
+        <ul style="font-size:13.5px;margin-top:8px;">
+          <li>Credit card fraud detection</li>
+          <li>Loan default prediction</li>
+          <li>Email spam filtering</li>
+          <li>Click-through rate prediction</li>
+          <li>Medical diagnosis (disease yes/no)</li>
+          <li>Customer churn prediction</li>
+        </ul>
+      </div>
+      <div class="tile" style="border-top:3px solid var(--amber);">
+        <div class="tile-label">Key Advantages</div>
+        <ul style="font-size:13.5px;margin-top:8px;">
+          <li>Outputs probabilities (not just classes)</li>
+          <li>Very interpretable — coefficients show direction and magnitude of each feature's effect</li>
+          <li>Fast to train and predict</li>
+          <li>Provides well-calibrated probabilities</li>
+          <li>Works great on linearly separable data</li>
+        </ul>
+      </div>
+    </div>
+    <div class="callout warn" style="margin-top:16px;">
+      <div class="callout-tag">⚠️ Key Limitation</div>
+      <p>Logistic regression produces linear decision boundaries. If your classes are not linearly separable (imagine two interleaved spirals), logistic regression will struggle. In that case, consider: kernel SVMs, decision trees, or neural networks. This is a common interview follow-up question.</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- PANEL 07: DECISION TREES -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div id="panel-dtree" class="panel">
+  <div class="sh-tag">Supervised Learning · Tree Models</div>
+  <div class="sh-title">Decision <span>Trees</span></div>
+  <div class="sh-desc">The most intuitive ML algorithm — it literally makes decisions like a human. The foundation for Random Forests and Gradient Boosting.</div>
+
+  <div class="card teal-border">
+    <div class="card-title">What is a Decision Tree?</div>
+    <p>A decision tree is a model that makes predictions by asking a series of yes/no questions about the input features, navigating through a tree structure until it reaches a final answer.</p>
+
+    <div class="analogy">
+      <div class="analogy-tag">🎮 Analogy — 20 Questions</div>
+      <p>You've played 20 Questions: someone thinks of an animal, and you ask yes/no questions ("Is it a mammal?", "Does it live in water?", "Is it bigger than a dog?") to narrow it down. A decision tree does exactly this — but it automatically learns the best questions to ask from your training data.</p>
+    </div>
+
+    <div class="g2" style="margin-top:16px;">
+      <div>
+        <p>A classic decision tree for predicting Titanic survival:</p>
+        <div style="background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:20px;font-family:'JetBrains Mono',monospace;font-size:13px;line-height:2.2;margin-top:12px;">
+          <span style="color:var(--teal);">ROOT:</span> Gender = Male?<br>
+          &nbsp;&nbsp;&nbsp;<span style="color:var(--amber);">YES →</span> Age > 9.5?<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--amber);">YES →</span> <span style="color:var(--red);">DIED (60% of cases)</span><br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--green);">NO →</span> <span style="color:var(--green);">SURVIVED</span><br>
+          &nbsp;&nbsp;&nbsp;<span style="color:var(--green);">NO →</span> <span style="color:var(--green);">SURVIVED (73% of women)</span>
+        </div>
+        <p style="font-size:13.5px;margin-top:12px;">Each internal node is a <strong>decision question</strong>. Each branch is an answer. Each leaf node is a final <strong>prediction</strong>.</p>
+      </div>
+      <div>
+        <div class="cw" style="margin:0;">
+          <canvas id="dtreeViz" style="max-height:240px;"></canvas>
+          <div class="clabel">Decision boundary created by a decision tree.<br>Each rectangular region = one leaf node's prediction.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">How Does It Learn? — Entropy & Information Gain</div>
+    <p>How does the tree decide which feature to split on first? It uses a concept from information theory: <strong>entropy</strong> and <strong>information gain</strong>.</p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="snum blue">1</div>
+        <div class="sbody">
+          <strong>Entropy — Measuring Impurity/Uncertainty</strong>
+          <p>Entropy measures how "mixed up" a set of labels is. If all examples in a node have the same label (all fraud or all not-fraud), entropy = 0 — perfectly pure. If it's 50/50 mixed, entropy = 1 — maximally uncertain.</p>
+          <div class="detail" style="font-family:'JetBrains Mono',monospace;font-size:12.5px;">
+            H(Y) = −Σ P(y=k) × log₂(P(y=k))<br><br>
+            Example: 50% spam, 50% not spam → H = −(0.5×log₂0.5 + 0.5×log₂0.5) = 1.0<br>
+            Example: 90% spam, 10% not spam → H = −(0.9×log₂0.9 + 0.1×log₂0.1) = 0.47
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="snum green">2</div>
+        <div class="sbody">
+          <strong>Information Gain — Measuring How Good a Split Is</strong>
+          <p>Information gain measures how much a split reduces entropy. The tree always chooses the split that maximizes information gain — i.e., the question that reduces uncertainty the most.</p>
+          <div class="detail" style="font-family:'JetBrains Mono',monospace;font-size:12.5px;">
+            IG(Y, X) = H(Y) − H(Y|X)<br><br>
+            H(Y) = entropy before split<br>
+            H(Y|X) = weighted avg entropy after splitting on feature X<br>
+            Higher IG = better split → choose this feature first
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="snum amber">3</div>
+        <div class="sbody">
+          <strong>Recursive Splitting — Building the Tree</strong>
+          <p>The algorithm greedily and recursively repeats: (1) find the feature that gives highest info gain, (2) split on it, (3) repeat on each resulting subset until stopping criteria met (max depth, min samples per leaf, etc.).</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <div class="callout-tag">💡 Gini Impurity — Alternative to Entropy</div>
+      <p>In practice, scikit-learn defaults to <strong>Gini impurity</strong> instead of entropy. It's slightly different mathematically but gives very similar results in practice. Gini = 1 − Σ P(k)². Both measure node impurity — either works fine in interviews.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Pros, Cons & When to Use Decision Trees</div>
+    <div class="g2">
+      <div>
+        <p style="color:var(--green);font-weight:600;margin-bottom:8px;">✅ Advantages</p>
+        <ul>
+          <li><strong>Highly interpretable</strong> — anyone can follow the decision path and understand why a prediction was made</li>
+          <li><strong>No feature scaling needed</strong> — doesn't care about the scale of features (unlike linear models or neural nets)</li>
+          <li><strong>Handles both numeric & categorical features</strong> natively</li>
+          <li><strong>Captures non-linear relationships</strong> automatically</li>
+          <li><strong>No assumptions</strong> about data distribution</li>
+        </ul>
+      </div>
+      <div>
+        <p style="color:var(--red);font-weight:600;margin-bottom:8px;">❌ Disadvantages</p>
+        <ul>
+          <li><strong>Extremely prone to overfitting</strong> — a fully grown tree can create a leaf for every single training point</li>
+          <li><strong>High variance</strong> — small changes in data produce very different trees</li>
+          <li><strong>Poor generalization alone</strong> — this is why Random Forests exist</li>
+          <li><strong>Biased toward features with many values</strong></li>
+          <li><strong>Unstable</strong> — rotating axes can change the tree structure</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="callout tip" style="margin-top:16px;">
+      <div class="callout-tag">🎯 Key Interview Point</div>
+      <p>Interviewers rarely ask you to use a single decision tree in practice — they exist mainly as building blocks for Random Forests and Gradient Boosting. The main reason to know single decision trees deeply: they introduce entropy, information gain, Gini — all concepts that carry over to ensemble methods.</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- PANEL 08: RANDOM FORESTS -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div id="panel-rf" class="panel">
+  <div class="sh-tag">Supervised Learning · Ensemble Methods</div>
+  <div class="sh-title">Random <span>Forests</span></div>
+  <div class="sh-desc">The workhorse of industry ML. Fixes everything wrong with single decision trees by combining hundreds of them. One of the most important algorithms to understand deeply.</div>
+
+  <div class="card green-border">
+    <div class="card-title">The Problem with One Tree & The Wisdom of Many</div>
+    <p>A single decision tree has one fatal flaw: <strong>high variance</strong>. Train it on slightly different data and you get a completely different tree. It memorizes the training data (overfits). Its predictions are unstable.</p>
+
+    <div class="analogy">
+      <div class="analogy-tag">🗳️ Analogy — Ask 500 Doctors Instead of One</div>
+      <p>Imagine you have a mysterious medical symptom. You could ask one doctor and get their opinion — but what if that doctor is having a bad day? Or has a bias? Instead, you consult 500 different doctors. Each one examines you slightly differently (different specialties, different emphasis on symptoms). Then you take the majority vote.</p>
+      <p style="margin-top:8px;">This is a Random Forest. Each tree is a different "doctor" trained on a slightly different subset of the data with a slightly different set of features to consider. The ensemble's collective judgment is far more reliable than any single tree.</p>
+    </div>
+
+    <div class="cw">
+      <canvas id="rfViz" style="max-height:240px;"></canvas>
+      <div class="clabel">Random Forest: many diverse trees vote on each prediction.<br>Majority wins for classification. Average wins for regression.</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">The Two Key Techniques — How Random Forests Stay Diverse</div>
+    <p>Random Forests don't just train the same tree many times. They use two tricks to ensure each tree is genuinely different:</p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="snum green">1</div>
+        <div class="sbody">
+          <strong>Bagging (Bootstrap Aggregation) — Different Training Data per Tree</strong>
+          <p>Each tree is trained on a <strong>different bootstrap sample</strong> of the training data. A bootstrap sample means: randomly draw n examples FROM the training set WITH REPLACEMENT. Some examples appear multiple times, some don't appear at all.</p>
+          <div class="detail">
+            <strong>Example:</strong> 1,000 training examples. For tree #1, randomly draw 1,000 samples with replacement → maybe example #5 appears 3 times, example #847 doesn't appear at all. Tree #2 gets a different random sample. Each tree sees slightly different data → each tree is slightly different → ensemble is diverse.
+          </div>
+          <div class="detail" style="margin-top:8px;border-left-color:var(--green);">
+            <strong>Why does this help?</strong> Averaging predictions from many high-variance models trained on different data drastically reduces variance while keeping bias low. This is why Random Forests generalize much better than single trees.
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="snum teal">2</div>
+        <div class="sbody">
+          <strong>Random Feature Selection — Different Features per Split</strong>
+          <p>At each split in each tree, the algorithm only considers a <strong>random subset of m features</strong> (not all features). This prevents strong features from dominating every tree and forces diversity.</p>
+          <div class="detail">
+            <strong>Why?</strong> If you have one incredibly predictive feature (like "credit score" for loan default), every tree would use it as the root node. All trees would be nearly identical — giving you no benefit from the ensemble. By randomly excluding features at each split, trees are forced to use different features, becoming genuinely diverse.
+          </div>
+          <div class="detail" style="margin-top:8px;border-left-color:var(--teal);">
+            <strong>Rule of thumb:</strong> m = √p for classification, m = p/3 for regression, where p is total number of features.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Feature Importance — A Free Bonus</div>
+    <p>One of the most useful outputs of a Random Forest is <strong>feature importance scores</strong> — how much each feature contributed to reducing impurity across all trees. This is essentially free feature selection.</p>
+
+    <div class="cw">
+      <canvas id="featureImportance" style="max-height:220px;"></canvas>
+      <div class="clabel">Example feature importance from a loan default Random Forest.<br>Higher = more useful for prediction. Great for feature selection and understanding your model.</div>
+    </div>
+
+    <div class="callout good">
+      <div class="callout-tag">✅ Why Companies Love Random Forests</div>
+      <p>1. <strong>Excellent performance</strong> out of the box — often competitive with complex models without much tuning. 2. <strong>Built-in feature importance</strong> — tells you what matters. 3. <strong>Robust to outliers and noise.</strong> 4. <strong>Handles missing values</strong> better than linear models. 5. <strong>Parallelizable</strong> — each tree trains independently.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Random Forest vs Single Decision Tree — Summary</div>
+    <table class="tbl">
+      <thead><tr><th>Property</th><th>Single Decision Tree</th><th>Random Forest</th></tr></thead>
+      <tbody>
+        <tr><td>Overfitting tendency</td><td style="color:var(--red);">Very high — memorizes training data</td><td style="color:var(--green);">Much lower — ensemble averages out noise</td></tr>
+        <tr><td>Variance</td><td style="color:var(--red);">High — sensitive to training data</td><td style="color:var(--green);">Low — averaging reduces variance</td></tr>
+        <tr><td>Interpretability</td><td style="color:var(--green);">High — can visualize entire tree</td><td style="color:var(--red);">Low — 500 trees is too complex to read</td></tr>
+        <tr><td>Training speed</td><td style="color:var(--green);">Fast</td><td style="color:var(--amber);">Slower — trains hundreds of trees</td></tr>
+        <tr><td>Prediction performance</td><td style="color:var(--amber);">Decent on training, poor on new data</td><td style="color:var(--green);">Strong generalization</td></tr>
+        <tr><td>Feature importance</td><td style="color:var(--amber);">Available but unreliable</td><td style="color:var(--green);">Stable and reliable</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- PANEL 09: GRADIENT BOOSTING -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div id="panel-boost" class="panel">
+  <div class="sh-tag">Supervised Learning · Ensemble Methods</div>
+  <div class="sh-title">Gradient <span>Boosting</span></div>
+  <div class="sh-desc">The algorithm that wins most ML competitions. XGBoost, LightGBM, CatBoost are all gradient boosting variants. Critical to understand for any DS interview.</div>
+
+  <div class="card purple-border">
+    <div class="card-title">The Core Idea — Learning from Mistakes</div>
+    <p>Random Forests train trees <em>in parallel</em> and aggregate them. Gradient Boosting trains trees <em>sequentially</em> — each new tree specifically focuses on correcting the errors made by all previous trees combined.</p>
+
+    <div class="analogy">
+      <div class="analogy-tag">🎓 Analogy — The Study Group That Specializes</div>
+      <p>Imagine a study group preparing for an exam. Person #1 tackles all the questions — they get some right, some wrong. Person #2 looks at what person #1 got wrong and focuses entirely on those mistakes. Person #3 looks at what persons #1 and #2 combined still got wrong and focuses on those remaining errors. Each person specializes in what their predecessors missed.</p>
+      <p style="margin-top:8px;">Together, the study group gets almost everything right — not because any individual was perfect, but because each one filled in the gaps of the others. That's gradient boosting.</p>
+    </div>
+
+    <div class="cw">
+      <canvas id="boostingViz" style="max-height:240px;"></canvas>
+      <div class="clabel">Gradient boosting: each tree (weak learner) is trained on the residual errors of the previous ensemble.<br>After n trees, the combined prediction is much more accurate than any single tree.</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">How It Works — Step by Step</div>
+    <div class="steps">
+      <div class="step">
+        <div class="snum purple">1</div>
+        <div class="sbody">
+          <strong>Start with a Simple Prediction</strong>
+          <p>Make an initial prediction (often just the mean of y for regression, or the most common class for classification). Calculate the errors (residuals) between predictions and actual values.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="snum blue">2</div>
+        <div class="sbody">
+          <strong>Train Tree #1 on the Residuals</strong>
+          <p>Build a small decision tree (weak learner) that predicts the residuals — not the original y, but the errors. This tree learns "where does the current model go wrong?"</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="snum green">3</div>
+        <div class="sbody">
+          <strong>Update Predictions</strong>
+          <p>Add tree #1's predictions to the current ensemble predictions (scaled by a learning rate). Calculate new residuals — these are smaller because the model improved.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="snum amber">4</div>
+        <div class="sbody">
+          <strong>Repeat for Trees #2, #3, ... #N</strong>
+          <p>Each subsequent tree learns to predict the remaining residuals. Over many trees, the ensemble slowly corrects more and more errors. Stop when residuals are tiny or you hit your limit of N trees.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="formula purple">
+      <span class="cm">// Final prediction is sum of all trees' outputs</span><br>
+      F(x) = F₀(x) + η·T₁(x) + η·T₂(x) + ... + η·Tₙ(x)<br><br>
+      F₀(x) = initial prediction (e.g., mean)<br>
+      Tₖ(x) = k-th tree's prediction<br>
+      η = learning rate (shrinks each tree's contribution)<br><br>
+      <span class="cm">// Lower learning rate + more trees = better generalization (but slower training)</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Random Forest vs Gradient Boosting — The Critical Comparison</div>
+    <p>This is one of the most commonly asked interview questions: <em>"Compare Random Forests and Gradient Boosting."</em></p>
+
+    <table class="tbl">
+      <thead><tr><th>Property</th><th>Random Forest</th><th>Gradient Boosting (XGBoost)</th></tr></thead>
+      <tbody>
+        <tr><td>Tree training order</td><td>Parallel — trees are independent</td><td>Sequential — each tree depends on previous</td></tr>
+        <tr><td>Focus</td><td>Reduces variance through averaging</td><td>Reduces bias by fixing residuals</td></tr>
+        <tr><td>Overfitting risk</td><td style="color:var(--green);">Lower — harder to overfit</td><td style="color:var(--amber);">Higher — can overfit with many trees or high LR</td></tr>
+        <tr><td>Training speed</td><td style="color:var(--green);">Fast (parallel)</td><td style="color:var(--amber);">Slower (sequential)</td></tr>
+        <tr><td>Prediction performance</td><td style="color:var(--amber);">Great — often competitive</td><td style="color:var(--green);">Often state-of-the-art on tabular data</td></tr>
+        <tr><td>Key hyperparameters</td><td>n_estimators, max_features, max_depth</td><td>learning_rate, n_estimators, max_depth, subsample</td></tr>
+        <tr><td>Best when</td><td>Quick baseline, noisy data</td><td>Maximum performance, Kaggle competitions</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout tip">
+      <div class="callout-tag">🎯 PWC Interview Question (from your book)</div>
+      <p><strong>"Compare and contrast gradient boosting and random forests."</strong></p>
+      <p style="margin-top:10px;"><strong>Model answer:</strong> "Both use ensembles of decision trees. Random forests train trees in parallel on bootstrap samples — each tree is independent, and they're averaged. This reduces variance. Gradient boosting trains trees sequentially — each tree corrects the errors of the previous ensemble. This reduces bias. In practice, gradient boosting (especially XGBoost) often achieves better performance on tabular data, but is more prone to overfitting and requires careful tuning of learning rate and number of trees. Random forests are more robust, faster to train, and a better starting point for quick baselines."</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- PANEL 10: MODEL EVALUATION -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div id="panel-eval" class="panel">
+  <div class="sh-tag">Machine Learning · Critical Skill</div>
+  <div class="sh-title">Model <span>Evaluation</span></div>
+  <div class="sh-desc">Building a model is only half the job. Knowing how to honestly evaluate it — and which metric to use for which problem — separates strong candidates from weak ones.</div>
+
+  <div class="card blue-border">
+    <div class="card-title">Cross-Validation — Getting an Honest Estimate</div>
+    <p>If you train and test on the same data, your model looks artificially good — it's seen all the "exam questions" before. Cross-validation gives you an honest estimate of how the model will perform on truly new data.</p>
+
+    <div class="analogy">
+      <div class="analogy-tag">📝 Analogy — The Rotating Exam Committee</div>
+      <p>Imagine 5 professors each prepare a different version of the exam. The student studies from everything except Prof #1's version, then takes Prof #1's exam. Then studies from everything except Prof #2's version, takes that exam. Rotate through all 5. Average the scores. This rotation ensures no single exam was "cheated" by being seen in study materials. That's k-fold cross-validation.</p>
+    </div>
+
+    <div class="cw">
+      <canvas id="kfoldViz" style="max-height:200px;"></canvas>
+      <div class="clabel">5-fold cross-validation: data is split into 5 folds. Each fold serves as the test set once.<br>Average of 5 test scores = honest estimate of model performance.</div>
+    </div>
+
+    <div class="formula">
+      <span class="cm">// k-Fold Cross-Validation Process</span><br>
+      1. Shuffle data randomly<br>
+      2. Split into k equal-sized folds (typically k=5 or k=10)<br>
+      3. For each fold i:<br>
+         &nbsp;&nbsp;&nbsp;- Train on all folds except fold i<br>
+         &nbsp;&nbsp;&nbsp;- Evaluate on fold i → get score_i<br>
+      4. Final score = average(score_1, score_2, ..., score_k)<br><br>
+      <span class="cm">// Result: unbiased estimate of generalization performance</span>
+    </div>
+
+    <div class="callout warn">
+      <div class="callout-tag">⚠️ CV for Time-Series Data</div>
+      <p>You CANNOT use standard k-fold CV on time-series data. If you train on future data to predict the past, you're "cheating" — in reality you'd never have future data at prediction time. Use "forward chaining" instead: always train on past data, test on future data.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Classification Metrics — The Confusion Matrix</div>
+    <p>For classification, accuracy ("what % did I get right?") is often misleading. Imagine a cancer detector that says "no cancer" for everyone — it's 99% accurate if only 1% of people have cancer. That's useless. You need the confusion matrix.</p>
+
+    <div class="cw">
+      <canvas id="confMatrix" style="max-height:240px;"></canvas>
+      <div class="clabel">The confusion matrix for binary classification — the foundation of all classification metrics.</div>
+    </div>
+
+    <div class="g2" style="margin-top:16px;">
+      <div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div class="tile" style="border-top:3px solid var(--green);">
+            <div class="tile-label">True Positive (TP)</div>
+            <p style="font-size:13px;">Predicted positive, actually positive. Correct! "Said fraud, was fraud."</p>
+          </div>
+          <div class="tile" style="border-top:3px solid var(--blue);">
+            <div class="tile-label">True Negative (TN)</div>
+            <p style="font-size:13px;">Predicted negative, actually negative. Correct! "Said not fraud, wasn't."</p>
+          </div>
+          <div class="tile" style="border-top:3px solid var(--red);">
+            <div class="tile-label">False Positive (FP)</div>
+            <p style="font-size:13px;">Predicted positive, actually negative. Type I Error. "Said fraud, wasn't."</p>
+          </div>
+          <div class="tile" style="border-top:3px solid var(--amber);">
+            <div class="tile-label">False Negative (FN)</div>
+            <p style="font-size:13px;">Predicted negative, actually positive. Type II Error. "Said not fraud, was."</p>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="formula" style="margin:0;font-size:13px;">
+          <span class="cm">// The four key metrics</span><br>
+          Precision = TP / (TP + FP)<br>
+          <span class="cm">// Of predicted positives, how many were right?</span><br><br>
+          Recall = TP / (TP + FN)<br>
+          <span class="cm">// Of actual positives, how many did we catch?</span><br><br>
+          F1 = 2 × (Precision × Recall) / (Precision + Recall)<br>
+          <span class="cm">// Harmonic mean — balances both</span><br><br>
+          Accuracy = (TP + TN) / Total<br>
+          <span class="cm">// Misleading for imbalanced classes!</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout tip" style="margin-top:16px;">
+      <div class="callout-tag">🎯 Which Metric to Use — The Golden Rule</div>
+      <p><strong>Use Precision when false positives are costly:</strong> Spam filter (flagging a real email as spam is bad). Drug approval (approving an ineffective drug wastes resources and patients' time).</p>
+      <p style="margin-top:8px;"><strong>Use Recall when false negatives are costly:</strong> Cancer screening (missing a real cancer case is dangerous). Fraud detection (letting a fraud transaction through costs money).</p>
+      <p style="margin-top:8px;"><strong>Use F1 when you need to balance both.</strong> Use AUC-ROC when comparing models across all thresholds (not just 0.5).</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">AUC-ROC — The Threshold-Independent Metric</div>
+    <p>The ROC (Receiver Operating Characteristic) curve plots True Positive Rate vs False Positive Rate at every possible classification threshold. AUC (Area Under the Curve) summarizes this in a single number from 0 to 1.</p>
+
+    <div class="cw">
+      <canvas id="aucRoc" style="max-height:240px;"></canvas>
+      <div class="clabel">ROC curves for three models. AUC = area under each curve. AUC=1 is perfect. AUC=0.5 = random guessing (diagonal line).<br>A model below the diagonal is worse than random.</div>
+    </div>
+
+    <div class="g3" style="margin-top:16px;">
+      <div class="tile" style="border-top:3px solid var(--green);">
+        <div class="tile-label">AUC = 1.0</div>
+        <div class="tile-value" style="font-size:22px;color:var(--green);">Perfect</div>
+        <p style="font-size:13px;">Model perfectly separates all classes. Suspicious — may be overfitting or data leakage.</p>
+      </div>
+      <div class="tile" style="border-top:3px solid var(--blue);">
+        <div class="tile-label">AUC = 0.7–0.9</div>
+        <div class="tile-value" style="font-size:22px;color:var(--blue);">Good</div>
+        <p style="font-size:13px;">Strong model. Typical for well-tuned ML on real data.</p>
+      </div>
+      <div class="tile" style="border-top:3px solid var(--red);">
+        <div class="tile-label">AUC = 0.5</div>
+        <div class="tile-value" style="font-size:22px;color:var(--red);">Useless</div>
+        <p style="font-size:13px;">Random guessing. Your model learned nothing useful.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- JAVASCRIPT ══════════════════════════════════════════ -->
+<script>
+Chart.defaults.color='#6b6b85';
+Chart.defaults.borderColor='#2a2a38';
+Chart.defaults.font.family="'Epilogue',sans-serif";
+Chart.defaults.font.size=12;
+
+function rng(min,max){return Math.random()*(max-min)+min;}
+function range(a,b,s){let r=[];for(let i=a;i<=b+1e-9;i=Math.round((i+s)*1e6)/1e6)r.push(i);return r;}
+
+// BIAS CHART - high bias (linear on curved data)
+{
+  const xs=range(-3,3,0.3);
+  const trueY=xs.map(x=>x*x+rng(-0.3,0.3));
+  const linear=xs.map(x=>0.5+x*0.3);
+  new Chart(document.getElementById('biasChart'),{
+    type:'scatter',
+    data:{datasets:[
+      {label:'True Data',data:xs.map((x,i)=>({x,y:trueY[i]})),backgroundColor:'rgba(59,130,246,0.7)',pointRadius:5},
+      {type:'line',label:'Linear Model (High Bias)',data:xs.map((x,i)=>({x,y:linear[i]})),borderColor:'#ef4444',fill:false,tension:0,pointRadius:0,borderWidth:2.5}
+    ]},
+    options:{plugins:{legend:{position:'top'}},scales:{x:{title:{display:true,text:'Feature x'}},y:{title:{display:true,text:'y'}}}}
+  });
+}
+
+// VARIANCE CHART - overfitting
+{
+  const pts=[[-2.5,6.5],[-2,4.2],[-1.5,2.3],[-1,1.1],[0,0.2],[1,0.9],[1.5,2.4],[2,4.1],[2.5,6.3]];
+  const trueX=range(-3,3,0.1),trueY=trueX.map(x=>x*x);
+  new Chart(document.getElementById('varianceChart'),{
+    type:'scatter',
+    data:{datasets:[
+      {label:'Training Points',data:pts.map(([x,y])=>({x,y})),backgroundColor:'rgba(59,130,246,0.8)',pointRadius:7},
+      {type:'line',label:'True Pattern',data:trueX.map((x,i)=>({x,y:trueY[i]})),borderColor:'#22c55e',fill:false,tension:0.3,pointRadius:0,borderWidth:2,borderDash:[5,3]},
+      {type:'line',label:'Overfit Model',data:pts.map(([x,y])=>({x,y})),borderColor:'#f59e0b',fill:false,tension:0.6,pointRadius:0,borderWidth:2.5}
+    ]},
+    options:{plugins:{legend:{position:'top'}},scales:{x:{title:{display:true,text:'x'}},y:{min:-1,max:10,title:{display:true,text:'y'}}}}
+  });
+}
+
+// BV TRADEOFF
+{
+  const complexity=range(1,20,1);
+  const bias=complexity.map(c=>15/c);
+  const variance=complexity.map(c=>c*0.4-0.3);
+  const total=complexity.map((c,i)=>bias[i]+variance[i]+1.5);
+  new Chart(document.getElementById('bvTradeoff'),{
+    type:'line',
+    data:{labels:complexity,datasets:[
+      {label:'Bias²',data:bias,borderColor:'#ef4444',fill:false,tension:0.3,pointRadius:0,borderWidth:2.5},
+      {label:'Variance',data:variance,borderColor:'#3b82f6',fill:false,tension:0.3,pointRadius:0,borderWidth:2.5},
+      {label:'Total Error',data:total,borderColor:'#a855f7',fill:false,tension:0.3,pointRadius:0,borderWidth:3,borderDash:[6,3]}
+    ]},
+    options:{plugins:{legend:{position:'top'}},scales:{x:{title:{display:true,text:'Model Complexity'}},y:{title:{display:true,text:'Error'}}}}
+  });
+}
+
+// OVERFIT DEMO
+{
+  const xs=range(-2,2,0.4);
+  const noise=xs.map(()=>rng(-0.4,0.4));
+  const y=xs.map((x,i)=>Math.sin(x)+noise[i]);
+  const xSmooth=range(-2.2,2.2,0.05);
+  new Chart(document.getElementById('overfitDemo'),{
+    type:'scatter',
+    data:{datasets:[
+      {label:'Training Data',data:xs.map((x,i)=>({x,y:y[i]})),backgroundColor:'rgba(59,130,246,0.8)',pointRadius:6},
+      {type:'line',label:'Underfit (Linear)',data:xSmooth.map(x=>({x,y:x*0.2})),borderColor:'#ef4444',fill:false,pointRadius:0,borderWidth:2},
+      {type:'line',label:'Good Fit',data:xSmooth.map(x=>({x,y:Math.sin(x)})),borderColor:'#22c55e',fill:false,pointRadius:0,borderWidth:2.5},
+      {type:'line',label:'Overfit',data:xSmooth.map(x=>({x,y:Math.sin(x)+0.5*Math.sin(8*x)*Math.exp(-x*x)})),borderColor:'#f59e0b',fill:false,pointRadius:0,borderWidth:2,borderDash:[4,2]}
+    ]},
+    options:{plugins:{legend:{position:'top'}},scales:{x:{title:{display:true,text:'x'}},y:{title:{display:true,text:'y'}}}}
+  });
+}
+
+// LINEAR REGRESSION
+{
+  const xs2=range(0,10,1);
+  const yTrue=xs2.map(x=>2*x+3+rng(-2,2));
+  const yFit=xs2.map(x=>2*x+3);
+  new Chart(document.getElementById('linregChart'),{
+    type:'scatter',
+    data:{datasets:[
+      {label:'Data Points',data:xs2.map((x,i)=>({x,y:yTrue[i]})),backgroundColor:'rgba(59,130,246,0.7)',pointRadius:6},
+      {type:'line',label:'Regression Line',data:xs2.map((x,i)=>({x,y:yFit[i]})),borderColor:'#22c55e',fill:false,pointRadius:0,borderWidth:2.5}
+    ]},
+    options:{plugins:{legend:{position:'top'}},scales:{x:{title:{display:true,text:'Feature (e.g., house size)'}},y:{title:{display:true,text:'Target (e.g., price)'}}}}
+  });
+}
+
+// SIGMOID
+{
+  const z=range(-6,6,0.1);
+  const sig=z.map(x=>1/(1+Math.exp(-x)));
+  new Chart(document.getElementById('sigmoidChart'),{
+    type:'line',
+    data:{labels:z,datasets:[{
+      label:'σ(z) = 1/(1+e⁻ᶻ)',
+      data:sig,
+      borderColor:'#a855f7',
+      backgroundColor:'rgba(168,85,247,0.1)',
+      fill:true,tension:0.4,pointRadius:0,borderWidth:2.5
+    }]},
+    options:{
+      plugins:{legend:{position:'top'}},
+      scales:{
+        x:{ticks:{maxTicksLimit:13},title:{display:true,text:'z (linear combination)'}},
+        y:{min:0,max:1,ticks:{callback:v=>v===0.5?'0.5 (threshold)':v},title:{display:true,text:'Probability'}}
+      }
+    }
+  });
+}
+
+// DECISION TREE VIZ
+{
+  new Chart(document.getElementById('dtreeViz'),{
+    type:'scatter',
+    data:{datasets:[
+      {label:'Class A',data:[{x:1,y:1},{x:1.5,y:2},{x:2,y:1.5},{x:0.5,y:3},{x:1,y:4},{x:2,y:3.5}],backgroundColor:'rgba(59,130,246,0.8)',pointRadius:7},
+      {label:'Class B',data:[{x:4,y:4},{x:5,y:3},{x:4.5,y:5},{x:6,y:4},{x:5,y:6},{x:6,y:2}],backgroundColor:'rgba(239,68,68,0.8)',pointRadius:7},
+      {type:'line',label:'Decision Boundary',data:[{x:3,y:0},{x:3,y:7}],borderColor:'#22c55e',fill:false,borderWidth:2.5,borderDash:[6,3],pointRadius:0}
+    ]},
+    options:{plugins:{legend:{position:'top'}},scales:{x:{min:0,max:7,title:{display:true,text:'Feature 1'}},y:{min:0,max:7,title:{display:true,text:'Feature 2'}}}}
+  });
+}
+
+// RANDOM FOREST VIZ
+{
+  const trees=['Tree 1','Tree 2','Tree 3','Tree 4','Tree 5','Tree 6','Tree 7','Tree 8','Tree 9','RF Ensemble'];
+  const accs=[0.82,0.79,0.85,0.81,0.78,0.83,0.80,0.84,0.77,0.93];
+  new Chart(document.getElementById('rfViz'),{
+    type:'bar',
+    data:{
+      labels:trees,
+      datasets:[{
+        label:'Accuracy',
+        data:accs,
+        backgroundColor:trees.map((t,i)=>i===9?'rgba(34,197,94,0.8)':'rgba(59,130,246,0.4)'),
+        borderColor:trees.map((t,i)=>i===9?'#22c55e':'#3b82f6'),
+        borderWidth:2,borderRadius:5
+      }]
+    },
+    options:{
+      plugins:{legend:{display:false}},
+      scales:{y:{min:0.6,max:1,ticks:{callback:v=>(v*100).toFixed(0)+'%'},title:{display:true,text:'Test Accuracy'}}}
+    }
+  });
+}
+
+// FEATURE IMPORTANCE
+{
+  new Chart(document.getElementById('featureImportance'),{
+    type:'bar',
+    data:{
+      labels:['Credit Score','Income','Debt Ratio','Loan Amount','Employment Yrs','Age','Num Inquiries','ZIP Code'],
+      datasets:[{
+        label:'Importance',
+        data:[0.38,0.24,0.15,0.10,0.07,0.03,0.02,0.01],
+        backgroundColor:'rgba(168,85,247,0.6)',
+        borderColor:'#a855f7',borderWidth:2,borderRadius:4
+      }]
+    },
+    options:{
+      indexAxis:'y',
+      plugins:{legend:{display:false}},
+      scales:{x:{min:0,max:0.45,title:{display:true,text:'Feature Importance Score'}}}
+    }
+  });
+}
+
+// BOOSTING VIZ
+{
+  const x=range(0,10,1);
+  const e1=x.map(i=>[2.5,2.0,1.8,1.5,1.4,1.2,1.0,0.9,0.8,0.7,0.6][i]);
+  const e5=x.map(i=>[2.5,1.5,1.0,0.7,0.5,0.4,0.3,0.25,0.20,0.18,0.15][i]);
+  const e50=x.map(i=>Math.max(0.05,2.5*Math.exp(-0.4*i)));
+  new Chart(document.getElementById('boostingViz'),{
+    type:'line',
+    data:{
+      labels:x.map(i=>`Tree ${i+1}`),
+      datasets:[
+        {label:'Single Tree Error',data:e1,borderColor:'#ef4444',fill:false,tension:0.2,pointRadius:3,borderWidth:2},
+        {label:'After 5 Trees',data:e5,borderColor:'#f59e0b',fill:false,tension:0.3,pointRadius:3,borderWidth:2},
+        {label:'Ensemble Error',data:e50,borderColor:'#22c55e',fill:false,tension:0.4,pointRadius:3,borderWidth:2.5}
+      ]
+    },
+    options:{plugins:{legend:{position:'top'}},scales:{y:{title:{display:true,text:'Residual Error'}},x:{title:{display:true,text:'Training Round'}}}}
+  });
+}
+
+// K-FOLD VIZ
+{
+  const folds=['Fold 1','Fold 2','Fold 3','Fold 4','Fold 5'];
+  new Chart(document.getElementById('kfoldViz'),{
+    type:'bar',
+    data:{
+      labels:['Round 1','Round 2','Round 3','Round 4','Round 5'],
+      datasets:folds.map((f,fi)=>({
+        label:f,
+        data:[0,1,2,3,4].map(ri=>ri===fi?0.4:0.6),
+        backgroundColor:fi===0?'rgba(239,68,68,0.8)':fi===1?'rgba(239,68,68,0.8)':fi===2?'rgba(239,68,68,0.8)':fi===3?'rgba(239,68,68,0.8)':'rgba(239,68,68,0.8)',
+        backgroundColor:[0,1,2,3,4].map(ri=>ri===fi?'rgba(239,68,68,0.7)':'rgba(59,130,246,0.4)'),
+        borderWidth:0,barPercentage:0.9,categoryPercentage:1
+      }))
+    },
+    options:{
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.raw===0.4?'TEST SET':'TRAIN SET'}}},
+      scales:{x:{stacked:true,title:{display:true,text:'Validation Round'}},y:{stacked:true,display:false}}
+    }
+  });
+}
+
+// CONFUSION MATRIX
+{
+  new Chart(document.getElementById('confMatrix'),{
+    type:'bar',
+    data:{
+      labels:['True Positive\n(TP)','False Positive\n(FP) — Type I','False Negative\n(FN) — Type II','True Negative\n(TN)'],
+      datasets:[{
+        data:[850,120,80,950],
+        backgroundColor:['rgba(34,197,94,0.7)','rgba(239,68,68,0.7)','rgba(245,158,11,0.7)','rgba(59,130,246,0.7)'],
+        borderColor:['#22c55e','#ef4444','#f59e0b','#3b82f6'],
+        borderWidth:2,borderRadius:6
+      }]
+    },
+    options:{plugins:{legend:{display:false}},scales:{y:{title:{display:true,text:'Count'}}}}
+  });
+}
+
+// AUC-ROC
+{
+  const fpr=range(0,1,0.02);
+  function rocCurve(auc){return fpr.map(x=>Math.min(1,Math.pow(x,1/(auc*3))));}
+  new Chart(document.getElementById('aucRoc'),{
+    type:'line',
+    data:{
+      labels:fpr,
+      datasets:[
+        {label:'Random (AUC=0.5)',data:fpr,borderColor:'#6b6b85',borderDash:[5,5],fill:false,pointRadius:0,borderWidth:1.5},
+        {label:'Good Model (AUC=0.82)',data:rocCurve(0.82),borderColor:'#3b82f6',fill:false,tension:0.3,pointRadius:0,borderWidth:2.5},
+        {label:'Strong Model (AUC=0.95)',data:rocCurve(0.95),borderColor:'#22c55e',fill:false,tension:0.3,pointRadius:0,borderWidth:2.5}
+      ]
+    },
+    options:{
+      plugins:{legend:{position:'top'}},
+      scales:{
+        x:{title:{display:true,text:'False Positive Rate (FPR)'},ticks:{maxTicksLimit:6}},
+        y:{title:{display:true,text:'True Positive Rate (Recall)'},min:0,max:1}
+      }
+    }
+  });
+}
+
+// NAV
+function show(id){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
+  event.target.classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,1943 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A/B Testing & Confidence Intervals — The Complete Beginner's Guide</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap');
+
+:root {
+  --bg:       #f7f4ef;
+  --surface:  #ffffff;
+  --surface2: #f0ece4;
+  --surface3: #e8e2d8;
+  --border:   #d8d0c4;
+  --ink:      #1a1610;
+  --ink2:     #3d3628;
+  --ink3:     #6b6255;
+  --muted:    #9a8f82;
+  --red:      #c0392b;
+  --green:    #1a7a4a;
+  --blue:     #1a4fa0;
+  --amber:    #b85c00;
+  --purple:   #5a2d8c;
+  --red-soft:    rgba(192,57,43,0.1);
+  --green-soft:  rgba(26,122,74,0.1);
+  --blue-soft:   rgba(26,79,160,0.1);
+  --amber-soft:  rgba(184,92,0,0.1);
+  --purple-soft: rgba(90,45,140,0.1);
+}
+
+*{box-sizing:border-box;margin:0;padding:0;}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 15.5px;
+  line-height: 1.8;
+}
+
+/* ─── HERO ─────────────────── */
+.hero {
+  background: var(--ink);
+  color: #f7f4ef;
+  padding: 56px 52px 48px;
+  position: relative;
+  overflow: hidden;
+}
+.hero::before {
+  content:'';
+  position:absolute; top:0;right:0;bottom:0;
+  width:45%;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 40px,
+    rgba(255,255,255,0.02) 40px,
+    rgba(255,255,255,0.02) 41px
+  );
+}
+.hero-eyebrow {
+  font-family: 'Fira Code', monospace;
+  font-size: 12px;
+  color: #c8a96e;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  margin-bottom: 18px;
+}
+.hero h1 {
+  font-family: 'Fraunces', serif;
+  font-size: 52px;
+  font-weight: 700;
+  line-height: 1.08;
+  max-width: 680px;
+}
+.hero h1 em {
+  font-style: italic;
+  font-weight: 300;
+  color: #c8a96e;
+}
+.hero-sub {
+  margin-top: 18px;
+  color: #b0a898;
+  max-width: 540px;
+  font-size: 16px;
+  font-weight: 300;
+}
+.hero-badges {
+  display: flex;
+  gap: 10px;
+  margin-top: 28px;
+  flex-wrap: wrap;
+}
+.hero-badge {
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 20px;
+  padding: 6px 16px;
+  font-family: 'Fira Code', monospace;
+  font-size: 12px;
+  color: #d4ccc0;
+}
+
+/* ─── PROGRESS BAR ────────── */
+.progress-bar {
+  background: var(--surface);
+  border-bottom: 2px solid var(--border);
+  padding: 0 52px;
+  display: flex;
+  gap: 0;
+  overflow-x: auto;
+}
+.pb-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 20px 14px;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  transition: all 0.2s;
+  min-width: fit-content;
+  gap: 4px;
+}
+.pb-item:hover { background: var(--surface2); }
+.pb-item.active { border-bottom-color: var(--ink); }
+.pb-num {
+  font-family: 'Fira Code', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.1em;
+}
+.pb-label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink3);
+  white-space: nowrap;
+}
+.pb-item.active .pb-label { color: var(--ink); }
+.pb-item.active .pb-num { color: var(--amber); }
+
+/* ─── PANELS ──────────────── */
+.panel { display: none; padding: 52px; max-width: 1140px; }
+.panel.active { display: block; }
+
+/* ─── SECTION HEADERS ─────── */
+.section-label {
+  font-family: 'Fira Code', monospace;
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.section-title {
+  font-family: 'Fraunces', serif;
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.15;
+  margin-bottom: 8px;
+}
+.section-desc {
+  font-size: 16px;
+  color: var(--ink3);
+  max-width: 700px;
+  margin-bottom: 40px;
+  font-weight: 300;
+}
+
+/* ─── CARDS ───────────────── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 36px 38px;
+  margin-bottom: 28px;
+}
+.card-title {
+  font-family: 'Fraunces', serif;
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 16px;
+}
+.card-title .num {
+  display: inline-flex;
+  width: 32px; height: 32px;
+  background: var(--ink);
+  color: #f7f4ef;
+  border-radius: 50%;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Fira Code', monospace;
+  font-size: 13px;
+  margin-right: 10px;
+  vertical-align: middle;
+}
+
+/* ─── ANALOGY BOX ──────────── */
+.analogy {
+  background: #fffdf5;
+  border: 1px solid #e8d89a;
+  border-left: 5px solid #c8a96e;
+  border-radius: 10px;
+  padding: 22px 26px;
+  margin: 20px 0;
+}
+.analogy-tag {
+  font-family: 'Fira Code', monospace;
+  font-size: 10px;
+  color: var(--amber);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  margin-bottom: 8px;
+}
+.analogy p { color: var(--ink2); font-size: 15px; }
+
+/* ─── STORY BOX ─────────────── */
+.story {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px 28px;
+  margin: 20px 0;
+}
+.story-company {
+  font-family: 'Fira Code', monospace;
+  font-size: 11px;
+  color: var(--blue);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin-bottom: 8px;
+}
+.story p { color: var(--ink2); }
+
+/* ─── FORMULA ─────────────── */
+.formula {
+  background: var(--ink);
+  color: #d4f0c8;
+  border-radius: 10px;
+  padding: 20px 26px;
+  font-family: 'Fira Code', monospace;
+  font-size: 14px;
+  line-height: 2;
+  margin: 18px 0;
+}
+.formula .comment { color: #7a9c6a; font-size: 12px; }
+.formula .highlight { color: #f9d77e; }
+.formula.blue { background: #0d1f40; color: #b8d4ff; }
+.formula.blue .comment { color: #5a7aaa; }
+.formula.blue .highlight { color: #ffd77e; }
+
+/* ─── DEFINITION ──────────── */
+.definition {
+  background: var(--blue-soft);
+  border: 1px solid rgba(26,79,160,0.2);
+  border-radius: 10px;
+  padding: 20px 24px;
+  margin: 16px 0;
+}
+.definition-word {
+  font-family: 'Fraunces', serif;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--blue);
+  margin-bottom: 6px;
+}
+.definition p { color: var(--ink2); }
+
+/* ─── GRIDS ───────────────── */
+.g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+.g4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 14px; }
+@media(max-width:800px){.g2,.g3,.g4{grid-template-columns:1fr;}}
+
+/* ─── STAT TILE ─────────────── */
+.tile {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 22px 20px;
+}
+.tile-label {
+  font-family: 'Fira Code', monospace;
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 8px;
+}
+.tile-value {
+  font-family: 'Fraunces', serif;
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1;
+  margin-bottom: 8px;
+}
+.tile p { font-size: 13px; color: var(--ink3); }
+
+/* ─── STEPS ───────────────── */
+.step-list { margin: 20px 0; }
+.step-item {
+  display: flex;
+  gap: 20px;
+  padding: 18px 0;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+}
+.step-item:last-child { border-bottom: none; }
+.step-circle {
+  width: 38px; height: 38px; min-width: 38px;
+  background: var(--ink);
+  color: #f7f4ef;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Fira Code', monospace;
+  font-size: 14px; font-weight: 500;
+}
+.step-circle.green { background: var(--green); }
+.step-circle.red   { background: var(--red);   }
+.step-circle.amber { background: var(--amber);  }
+.step-circle.blue  { background: var(--blue);   }
+.step-content strong {
+  display: block;
+  font-size: 16px;
+  color: var(--ink);
+  margin-bottom: 5px;
+}
+.step-content p { font-size: 14px; color: var(--ink3); }
+.step-content .detail {
+  background: var(--surface2);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-top: 10px;
+  font-size: 14px;
+  color: var(--ink2);
+  border-left: 3px solid var(--border);
+}
+
+/* ─── CALLOUT BOXES ───────── */
+.callout {
+  border-radius: 10px;
+  padding: 18px 22px;
+  margin: 18px 0;
+}
+.callout-tag {
+  font-family: 'Fira Code', monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+.callout p { font-size: 14.5px; }
+.callout.warn   { background: var(--red-soft);    border: 1px solid rgba(192,57,43,0.2); }
+.callout.warn   .callout-tag { color: var(--red); }
+.callout.good   { background: var(--green-soft);  border: 1px solid rgba(26,122,74,0.2); }
+.callout.good   .callout-tag { color: var(--green); }
+.callout.info   { background: var(--blue-soft);   border: 1px solid rgba(26,79,160,0.2); }
+.callout.info   .callout-tag { color: var(--blue); }
+.callout.tip    { background: var(--amber-soft);  border: 1px solid rgba(184,92,0,0.2); }
+.callout.tip    .callout-tag { color: var(--amber); }
+.callout.purple { background: var(--purple-soft); border: 1px solid rgba(90,45,140,0.2); }
+.callout.purple .callout-tag { color: var(--purple); }
+
+/* ─── CHART WRAP ──────────── */
+.cw {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  margin: 20px 0;
+}
+.cw canvas { max-height: 280px; }
+.cw-label {
+  font-family: 'Fira Code', monospace;
+  font-size: 11px;
+  color: var(--muted);
+  text-align: center;
+  margin-top: 12px;
+  line-height: 1.5;
+}
+
+/* ─── VERSUS BOX ──────────── */
+.versus {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 16px;
+  align-items: center;
+  margin: 20px 0;
+}
+.vs-label {
+  font-family: 'Fraunces', serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--muted);
+  text-align: center;
+}
+.vs-box {
+  border-radius: 12px;
+  padding: 22px;
+}
+.vs-box.wrong { background: var(--red-soft); border: 1px solid rgba(192,57,43,0.2); }
+.vs-box.right { background: var(--green-soft); border: 1px solid rgba(26,122,74,0.2); }
+.vs-title {
+  font-family: 'Fira Code', monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 10px;
+  font-weight: 500;
+}
+.vs-box.wrong .vs-title { color: var(--red); }
+.vs-box.right .vs-title { color: var(--green); }
+.vs-box p { font-size: 14px; color: var(--ink2); }
+
+/* ─── TABLE ───────────────── */
+.tbl { width:100%; border-collapse:collapse; margin: 16px 0; }
+.tbl th {
+  background: var(--ink);
+  color: #f7f4ef;
+  padding: 13px 16px;
+  text-align: left;
+  font-family: 'Fira Code', monospace;
+  font-size: 11.5px;
+  letter-spacing: 0.06em;
+  font-weight: 400;
+}
+.tbl td {
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+  color: var(--ink2);
+  vertical-align: top;
+}
+.tbl tr:hover td { background: var(--surface2); }
+
+/* ─── HIGHLIGHT QUOTE ─────── */
+.quote-block {
+  border-left: 5px solid var(--ink);
+  padding: 16px 24px;
+  margin: 20px 0;
+  background: var(--surface2);
+  border-radius: 0 10px 10px 0;
+}
+.quote-block p {
+  font-family: 'Fraunces', serif;
+  font-size: 19px;
+  font-style: italic;
+  color: var(--ink);
+  line-height: 1.5;
+}
+.quote-block span {
+  font-family: 'Fira Code', monospace;
+  font-size: 11px;
+  color: var(--muted);
+  display: block;
+  margin-top: 8px;
+}
+
+/* ─── INTERACTIVE SLIDERS ─── */
+.slider-group { margin: 16px 0; }
+.slider-label {
+  display: flex;
+  justify-content: space-between;
+  font-family: 'Fira Code', monospace;
+  font-size: 12px;
+  color: var(--ink3);
+  margin-bottom: 6px;
+}
+.slider-label span { color: var(--amber); font-weight: 500; }
+input[type=range] {
+  width: 100%;
+  height: 6px;
+  accent-color: var(--ink);
+  cursor: pointer;
+}
+
+/* ─── RESULT BOX ──────────── */
+.result-box {
+  background: var(--ink);
+  color: #f7f4ef;
+  border-radius: 12px;
+  padding: 24px 28px;
+  margin-top: 20px;
+  font-family: 'Fira Code', monospace;
+  font-size: 13.5px;
+  line-height: 2;
+}
+.result-box .r-label { color: #9a8f82; font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; }
+.result-box .r-value { color: #c8a96e; font-size: 22px; font-family: 'Fraunces', serif; font-weight: 700; }
+
+/* ─── FLOW DIAGRAM ────────── */
+.flow {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin: 24px 0;
+  overflow-x: auto;
+  padding: 4px;
+}
+.flow-node {
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 18px;
+  text-align: center;
+  min-width: 110px;
+  flex-shrink: 0;
+}
+.flow-node .fn-num { font-family:'Fira Code',monospace; font-size:10px; color:var(--muted); margin-bottom:4px; }
+.flow-node .fn-text { font-size:13px; font-weight:600; color:var(--ink); line-height:1.3; }
+.flow-node.highlight { background:var(--ink); border-color:var(--ink); }
+.flow-node.highlight .fn-text { color:#f7f4ef; }
+.flow-node.highlight .fn-num { color:#9a8f82; }
+.flow-arrow { font-size:20px; color:var(--border); padding: 0 6px; flex-shrink:0; }
+
+/* SEPARATOR */
+.sep { height:1px; background:var(--border); margin: 32px 0; }
+
+/* PILL TAG */
+.tag {
+  display: inline-block;
+  padding: 3px 12px;
+  border-radius: 20px;
+  font-family: 'Fira Code', monospace;
+  font-size: 11.5px;
+  margin: 3px;
+}
+.tag-green  { background: var(--green-soft);  color: var(--green);  border: 1px solid rgba(26,122,74,0.2); }
+.tag-red    { background: var(--red-soft);    color: var(--red);    border: 1px solid rgba(192,57,43,0.2); }
+.tag-blue   { background: var(--blue-soft);   color: var(--blue);   border: 1px solid rgba(26,79,160,0.2); }
+.tag-amber  { background: var(--amber-soft);  color: var(--amber);  border: 1px solid rgba(184,92,0,0.2); }
+.tag-purple { background: var(--purple-soft); color: var(--purple); border: 1px solid rgba(90,45,140,0.2); }
+
+p { color: var(--ink2); margin: 10px 0; }
+strong { color: var(--ink); }
+ul, ol { padding-left: 22px; color: var(--ink2); }
+li { margin: 6px 0; }
+::-webkit-scrollbar{width:6px;height:6px;} ::-webkit-scrollbar-track{background:var(--surface2);} ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════
+     HERO
+══════════════════════════════ -->
+<div class="hero">
+  <div class="hero-eyebrow">📊 Phase 1 · Statistics · Module 2 of 2</div>
+  <h1>Confidence Intervals<br>&amp; <em>A/B Testing</em></h1>
+  <p class="hero-sub">Built for complete beginners. Every concept explained in plain English first — with real company stories, then the math. Sourced from <em>Ace the Data Science Interview</em>.</p>
+  <div class="hero-badges">
+    <span class="hero-badge">🍕 Pizza analogies</span>
+    <span class="hero-badge">🔬 Real experiments</span>
+    <span class="hero-badge">📈 Live charts</span>
+    <span class="hero-badge">🎯 Interview answers</span>
+    <span class="hero-badge">⚠️ Common traps</span>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     PROGRESS BAR / NAV
+══════════════════════════════ -->
+<div class="progress-bar">
+  <div class="pb-item active" onclick="show('ci1')"><div class="pb-num">01</div><div class="pb-label">Why Ranges?</div></div>
+  <div class="pb-item" onclick="show('ci2')"><div class="pb-num">02</div><div class="pb-label">What Is a CI?</div></div>
+  <div class="pb-item" onclick="show('ci3')"><div class="pb-num">03</div><div class="pb-label">Building a CI</div></div>
+  <div class="pb-item" onclick="show('ci4')"><div class="pb-num">04</div><div class="pb-label">CI Width</div></div>
+  <div class="pb-item" onclick="show('ab1')"><div class="pb-num">05</div><div class="pb-label">What Is A/B Testing?</div></div>
+  <div class="pb-item" onclick="show('ab2')"><div class="pb-num">06</div><div class="pb-label">The Setup</div></div>
+  <div class="pb-item" onclick="show('ab3')"><div class="pb-num">07</div><div class="pb-label">Sample Size</div></div>
+  <div class="pb-item" onclick="show('ab4')"><div class="pb-num">08</div><div class="pb-label">Reading Results</div></div>
+  <div class="pb-item" onclick="show('ab5')"><div class="pb-num">09</div><div class="pb-label">Pitfalls</div></div>
+  <div class="pb-item" onclick="show('ab6')"><div class="pb-num">10</div><div class="pb-label">Full Example</div></div>
+  <div class="pb-item" onclick="show('cheatsheet')"><div class="pb-num">11</div><div class="pb-label">Cheat Sheet</div></div>
+</div>
+
+
+<!-- ══════════════════════════════ PANEL 01 ══ -->
+<div id="panel-ci1" class="panel active">
+  <div class="section-label">Confidence Intervals · Part 1</div>
+  <div class="section-title">Why a single number<br>is never enough</div>
+  <div class="section-desc">Before we learn what a confidence interval is, let's understand <em>why</em> we even need one. This is the most important thing to understand before any formula.</div>
+
+  <div class="card">
+    <div class="card-title">The Problem: You Can't Measure Everyone</div>
+    <p>Imagine Netflix wants to know: <strong>"What is the average time our users spend watching per day?"</strong></p>
+    <p>Netflix has 260 million subscribers worldwide. Can they ask every single person? No. It would take too long, cost too much, and many people wouldn't respond.</p>
+    <p>So what do they do? They <strong>take a sample</strong> — maybe 10,000 randomly chosen users. They measure watch time for those 10,000 people. They calculate the average.</p>
+    <p>Let's say the average comes out to <strong>2.1 hours per day.</strong></p>
+
+    <div class="analogy">
+      <div class="analogy-tag">🍕 Analogy — Tasting the Soup</div>
+      <p>Imagine you're cooking a giant pot of soup for 500 people. You can't taste every drop — but you take a spoonful and taste it. That spoonful is your <strong>sample</strong>. The taste of that spoonful is your <strong>estimate</strong> of what the whole pot tastes like.</p>
+      <p style="margin-top:8px;">But here's the thing: <strong>if you took a different spoonful from a different part of the pot, you'd get a slightly different taste.</strong> Maybe a bit saltier. Maybe a bit blander. This variation is normal — and it's exactly the problem confidence intervals solve.</p>
+    </div>
+
+    <div class="sep"></div>
+
+    <div class="card-title" style="margin-bottom:10px;">The Core Problem: Sample Results Vary</div>
+    <p>Here's what happens if Netflix ran this study 5 different times with 5 different random samples of 10,000 users:</p>
+
+    <div class="g4" style="margin-top:16px;">
+      <div class="tile">
+        <div class="tile-label">Sample 1</div>
+        <div class="tile-value" style="color:var(--blue);">2.1 hrs</div>
+        <p>n = 10,000 users</p>
+      </div>
+      <div class="tile">
+        <div class="tile-label">Sample 2</div>
+        <div class="tile-value" style="color:var(--blue);">2.3 hrs</div>
+        <p>n = 10,000 users</p>
+      </div>
+      <div class="tile">
+        <div class="tile-label">Sample 3</div>
+        <div class="tile-value" style="color:var(--blue);">1.9 hrs</div>
+        <p>n = 10,000 users</p>
+      </div>
+      <div class="tile">
+        <div class="tile-label">Sample 4</div>
+        <div class="tile-value" style="color:var(--blue);">2.2 hrs</div>
+        <p>n = 10,000 users</p>
+      </div>
+    </div>
+
+    <p style="margin-top:16px;">Every sample gives a <em>slightly different answer</em>. So which one is the "real" average? The truth is: <strong>we don't know exactly</strong>. The true population mean is somewhere nearby — but our single number (called a <strong>point estimate</strong>) doesn't tell us how confident we should be, or how far off we might be.</p>
+
+    <div class="callout warn">
+      <div class="callout-tag">⚠️ The Problem with Point Estimates</div>
+      <p>Saying "average watch time is 2.1 hours" is like saying "I'll arrive at 3pm" without mentioning that traffic could make it anywhere from 2:45pm to 3:30pm. The single number is useful, but dangerously incomplete without context about its uncertainty.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">The Solution: Give a Range, Not Just a Number</div>
+    <p>Instead of reporting just one number, data scientists report a <strong>range of plausible values</strong>. This range is called a <strong>confidence interval (CI)</strong>.</p>
+
+    <div class="g2" style="margin-top:16px;">
+      <div style="background:var(--red-soft); border:1px solid rgba(192,57,43,0.2); border-radius:12px; padding:24px;">
+        <div style="font-family:'Fira Code',monospace; font-size:11px; color:var(--red); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:12px;">❌ Point Estimate Only</div>
+        <div style="font-family:'Fraunces',serif; font-size:28px; font-weight:700; color:var(--ink); margin-bottom:10px;">2.1 hours</div>
+        <p style="font-size:14px;">One number. No uncertainty. You have no idea if this is a reliable estimate or a lucky coincidence from an unrepresentative sample. Dangerous to act on.</p>
+      </div>
+      <div style="background:var(--green-soft); border:1px solid rgba(26,122,74,0.2); border-radius:12px; padding:24px;">
+        <div style="font-family:'Fira Code',monospace; font-size:11px; color:var(--green); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:12px;">✅ Confidence Interval</div>
+        <div style="font-family:'Fraunces',serif; font-size:24px; font-weight:700; color:var(--ink); margin-bottom:10px;">1.98 – 2.22 hours</div>
+        <p style="font-size:14px;">A range. Tells you the estimate is 2.1 hours, and you're 95% confident the true answer falls somewhere between 1.98 and 2.22. You can make much better decisions with this.</p>
+      </div>
+    </div>
+
+    <div class="cw" style="margin-top:24px;">
+      <canvas id="pointVsCI" style="max-height:220px;"></canvas>
+      <div class="cw-label">The confidence interval gives you a range around your point estimate.<br>Wider = more uncertainty. Narrower = more precision.</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════ PANEL 02 ══ -->
+<div id="panel-ci2" class="panel">
+  <div class="section-label">Confidence Intervals · Part 2</div>
+  <div class="section-title">What a confidence<br>interval actually means</div>
+  <div class="section-desc">This is the most misunderstood concept in all of statistics. Even professional data scientists get this wrong. Let's get it right.</div>
+
+  <div class="card">
+    <div class="card-title">The Precise Definition — In Plain English</div>
+
+    <div class="quote-block">
+      <p>"A 95% confidence interval means: if we repeated our sampling process 100 times and built a confidence interval each time, about 95 of those 100 intervals would contain the true population value."</p>
+      <span>— The correct interpretation, always</span>
+    </div>
+
+    <p>Let's unpack this slowly, because it's tricky.</p>
+    <p>When we say "95% confidence," we're NOT saying "there's a 95% chance the true value is in this one interval." We're saying the <strong>method</strong> we used to build this interval is reliable 95% of the time.</p>
+    <p>Think of it like a fishing net. If your net catches fish 95% of the time you cast it, and you cast it once today and catch something — you don't know for certain if today was one of the lucky 95% or the unlucky 5%. But you trust the net because it works 95% of the time.</p>
+
+    <div class="analogy">
+      <div class="analogy-tag">🎯 Analogy — The Horseshoe Game</div>
+      <p>Imagine you're playing horseshoes. You're not a perfect player — sometimes you land closer to the stake, sometimes further. But you're a consistent player: 95% of your throws land within 2 feet of the stake.</p>
+      <p style="margin-top:8px;">Each throw is like one sample, and "landing within 2 feet" is like building a CI that contains the true mean. The true stake doesn't move — but where your horseshoe lands varies. A 95% CI means your "horseshoe" (your interval) captures the stake 95% of the time.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Visualizing It: 100 Confidence Intervals</div>
+    <p>The best way to understand this is to see it. Below, we simulated taking 60 different random samples from the same population (true mean = 50). For each sample, we built a 95% CI. Look at what happens:</p>
+
+    <div class="cw">
+      <canvas id="ciSimulation" style="max-height:360px;"></canvas>
+      <div class="cw-label">60 simulated 95% confidence intervals. Green = captured true mean (μ=50). Red = missed.<br>Notice: about 3 red ones — that's the expected ~5% miss rate.</div>
+    </div>
+
+    <div class="callout warn">
+      <div class="callout-tag">⚠️ The #1 Misconception — Interviewers Test This Directly</div>
+      <p><strong>WRONG:</strong> "There's a 95% probability that the true mean is between 1.98 and 2.22 hours."</p>
+      <p style="margin-top:8px;"><strong>WHY IT'S WRONG:</strong> The true mean is a fixed, unchanging number. It doesn't have a probability — it either IS between 1.98 and 2.22, or it ISN'T. We just don't know which. There's no probability involved for a fixed quantity.</p>
+      <p style="margin-top:8px;"><strong>RIGHT:</strong> "The process I used to build this interval captures the true mean 95% of the time. So I'm 95% confident in my method."</p>
+    </div>
+
+    <div class="callout good">
+      <div class="callout-tag">✅ Memory Trick</div>
+      <p>The 95% refers to the <strong>procedure</strong>, not this specific interval. Think of it as saying "I used a method that works 95% of the time." The interval itself either works or it doesn't — we just can't know which.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">The Link to Hypothesis Testing</div>
+    <p>Confidence intervals and hypothesis tests are two different ways of answering the same question. They're deeply connected:</p>
+
+    <div class="formula blue">
+      <span class="comment">// The golden rule — works every time</span><br>
+      If <span class="highlight">0 is NOT inside</span> your 95% CI for the difference → reject H₀ at α = 0.05<br>
+      If <span class="highlight">0 IS inside</span> your 95% CI for the difference → fail to reject H₀ at α = 0.05<br><br>
+      <span class="comment">// Example: Testing if a new button color increases clicks</span><br>
+      CI for (new clicks% − old clicks%) = [0.8%, 3.2%]<br>
+      <span class="highlight">0 is not in this interval</span> → statistically significant improvement ✓
+    </div>
+
+    <p>This is extremely useful in interviews. If asked "is this result significant?", you can answer with either a p-value OR a confidence interval — both are valid, and mentioning both makes you look very rigorous.</p>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════ PANEL 03 ══ -->
+<div id="panel-ci3" class="panel">
+  <div class="section-label">Confidence Intervals · Part 3</div>
+  <div class="section-title">Building a confidence<br>interval from scratch</div>
+  <div class="section-desc">Now we'll learn the formula. But we'll build up to it piece by piece — no formula until you understand what every part means.</div>
+
+  <div class="card">
+    <div class="card-title">The Building Blocks</div>
+    <p>A confidence interval has exactly 3 ingredients. Let's understand each one before combining them.</p>
+
+    <div class="step-list">
+      <div class="step-item">
+        <div class="step-circle blue">1</div>
+        <div class="step-content">
+          <strong>Your Best Guess (Point Estimate = x̄ or p̂)</strong>
+          <p>This is simply the average you calculated from your sample. For means, it's called x̄ (x-bar). For proportions (like click rates), it's called p̂ (p-hat). This is the CENTER of your confidence interval.</p>
+          <div class="detail">📺 <strong>Netflix example:</strong> You sampled 10,000 users and found 24% clicked on a new thumbnail. So p̂ = 0.24. This is your best single guess for the true click rate.</div>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-circle amber">2</div>
+        <div class="step-content">
+          <strong>How Spread Out Your Estimates Are (Standard Error = SE)</strong>
+          <p>If you took many different samples of the same size, each would give a slightly different mean. The Standard Error measures how much these sample means typically vary. It's not the same as standard deviation — it measures the variability of the <em>mean itself</em>, not individual data points.</p>
+          <div class="detail">
+            For a proportion: SE = √(p̂ × (1 − p̂) / n)<br>
+            For a mean: SE = σ / √n<br><br>
+            <strong>Key insight:</strong> SE shrinks as n grows. More data = estimates that vary less = smaller SE.
+          </div>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-circle green">3</div>
+        <div class="step-content">
+          <strong>How Confident You Want to Be (Critical Value = z*)</strong>
+          <p>How wide do you want your net? If you want to be 95% confident, you use z* = 1.96. If you want 99% confidence, you use z* = 2.576. Higher confidence = wider interval. You're trading precision for certainty.</p>
+          <div class="detail" style="border-left-color:var(--green);">
+            90% confidence → z* = 1.645<br>
+            <strong>95% confidence → z* = 1.96</strong> (industry standard)<br>
+            99% confidence → z* = 2.576
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">The Formula — Now It Makes Sense</div>
+    <div class="formula">
+      <span class="comment">// General formula for any confidence interval</span><br>
+      CI = <span class="highlight">Point Estimate</span>  ±  (<span class="highlight">Critical Value</span>  ×  <span class="highlight">Standard Error</span>)<br><br>
+      <span class="comment">// For a mean (when you know population std dev σ)</span><br>
+      CI = x̄  ±  z* × (σ / √n)<br><br>
+      <span class="comment">// For a proportion (conversion rates, click rates, churn %)</span><br>
+      CI = p̂  ±  z* × √( p̂(1−p̂) / n )
+    </div>
+
+    <p>The "±" means you go that amount in both directions from your estimate. The result is a lower bound and an upper bound — your interval.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Full Worked Example — Step by Step</div>
+
+    <div class="story">
+      <div class="story-company">🎬 Netflix — New Thumbnail Test</div>
+      <p>Netflix tests a new thumbnail design for a popular show. They show it to 500 random users. 120 of them click on it. What is the 95% confidence interval for the true click-through rate?</p>
+    </div>
+
+    <div class="step-list">
+      <div class="step-item">
+        <div class="step-circle blue">1</div>
+        <div class="step-content">
+          <strong>Calculate the Point Estimate (p̂)</strong>
+          <p>p̂ = clicks / total users = 120 / 500 = <strong>0.24 (24%)</strong></p>
+          <p>This is our best guess: 24% of users click the thumbnail.</p>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-circle amber">2</div>
+        <div class="step-content">
+          <strong>Calculate the Standard Error (SE)</strong>
+          <p>SE = √(p̂ × (1 − p̂) / n) = √(0.24 × 0.76 / 500) = √(0.0003648) = <strong>0.0191</strong></p>
+          <p>This tells us: sample proportions typically vary by about ±1.91% from the true rate.</p>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-circle green">3</div>
+        <div class="step-content">
+          <strong>Choose the Critical Value (z* for 95%)</strong>
+          <p>We want 95% confidence, so z* = <strong>1.96</strong></p>
+          <p>This is the z-score that captures the middle 95% of the standard normal distribution.</p>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-circle" style="background:var(--purple);">4</div>
+        <div class="step-content">
+          <strong>Build the Interval</strong>
+          <p>Margin of Error = z* × SE = 1.96 × 0.0191 = <strong>0.0374</strong></p>
+          <p>Lower bound = 0.24 − 0.0374 = <strong>20.3%</strong></p>
+          <p>Upper bound = 0.24 + 0.0374 = <strong>27.7%</strong></p>
+          <div class="detail" style="border-left-color:var(--purple);">
+            <strong>Result: 95% CI = [20.3%, 27.7%]</strong><br><br>
+            What does this mean in plain English? "We're 95% confident that the true click rate for this thumbnail — across all Netflix users — is somewhere between 20.3% and 27.7%."
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cw">
+      <canvas id="ciBuilt" style="max-height:200px;"></canvas>
+      <div class="cw-label">The 95% CI for Netflix thumbnail click rate: our estimate of 24% sits in the center, with uncertainty extending to either side.</div>
+    </div>
+
+    <div class="callout tip">
+      <div class="callout-tag">🎯 How to Use This Result</div>
+      <p>If the old thumbnail had a 19% click rate, and 19% is BELOW our confidence interval lower bound of 20.3%, we can say the new thumbnail is <strong>statistically significantly better</strong> at 95% confidence.</p>
+      <p style="margin-top:8px;">If the old thumbnail had a 21% click rate, and 21% is INSIDE our interval [20.3%, 27.7%], we <strong>cannot conclude</strong> the new thumbnail is better — the difference might just be random variation.</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════ PANEL 04 ══ -->
+<div id="panel-ci4" class="panel">
+  <div class="section-label">Confidence Intervals · Part 4</div>
+  <div class="section-title">What makes an interval<br>wider or narrower?</div>
+  <div class="section-desc">Understanding the three levers that control CI width is crucial — it directly impacts how you design experiments in the real world.</div>
+
+  <div class="card">
+    <div class="card-title">The Three Levers</div>
+    <p>Look at the CI formula: CI = p̂ ± z* × √(p̂(1−p̂) / n)</p>
+    <p>There are exactly three things that affect the width of a confidence interval:</p>
+
+    <div class="g3" style="margin-top:20px;">
+      <div style="background:var(--blue-soft); border:1px solid rgba(26,79,160,0.2); border-radius:12px; padding:22px; border-top:4px solid var(--blue);">
+        <div style="font-family:'Fira Code',monospace; font-size:11px; color:var(--blue); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:10px;">Lever 1</div>
+        <strong style="font-size:16px; display:block; margin-bottom:8px;">Sample Size (n) ↑</strong>
+        <p style="font-size:14px;">More data = narrower interval. Because with more data, your sample mean is a more reliable estimate. More samples = less randomness.</p>
+        <div style="margin-top:12px; font-family:'Fira Code',monospace; font-size:13px; color:var(--blue);">Width ∝ 1/√n → NARROWER ✓</div>
+      </div>
+      <div style="background:var(--red-soft); border:1px solid rgba(192,57,43,0.2); border-radius:12px; padding:22px; border-top:4px solid var(--red);">
+        <div style="font-family:'Fira Code',monospace; font-size:11px; color:var(--red); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:10px;">Lever 2</div>
+        <strong style="font-size:16px; display:block; margin-bottom:8px;">Confidence Level ↑</strong>
+        <p style="font-size:14px;">Want to be more certain? You have to cast a wider net. Going from 95% to 99% confidence means your interval gets noticeably wider.</p>
+        <div style="margin-top:12px; font-family:'Fira Code',monospace; font-size:13px; color:var(--red);">95%→99% confidence → WIDER ↑</div>
+      </div>
+      <div style="background:var(--amber-soft); border:1px solid rgba(184,92,0,0.2); border-radius:12px; padding:22px; border-top:4px solid var(--amber);">
+        <div style="font-family:'Fira Code',monospace; font-size:11px; color:var(--amber); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:10px;">Lever 3</div>
+        <strong style="font-size:16px; display:block; margin-bottom:8px;">Data Variability (σ) ↑</strong>
+        <p style="font-size:14px;">Noisier data = wider interval. If users' watch times vary wildly (some watch 30 min, some watch 8 hours), your estimate is less reliable.</p>
+        <div style="margin-top:12px; font-family:'Fira Code',monospace; font-size:13px; color:var(--amber);">Higher variance → WIDER ↑</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Interactive: Watch the CI Change</div>
+    <p>Use the sliders to see how each factor changes the confidence interval in real time.</p>
+    <div class="g2">
+      <div>
+        <div class="slider-group">
+          <div class="slider-label">Sample Size (n): <span id="n_val">500</span></div>
+          <input type="range" min="50" max="5000" value="500" step="50" id="n_slider" oninput="updateCI()">
+        </div>
+        <div class="slider-group">
+          <div class="slider-label">Confidence Level: <span id="conf_val">95</span>%</div>
+          <input type="range" min="80" max="99" value="95" step="1" id="conf_slider" oninput="updateCI()">
+        </div>
+        <div class="slider-group">
+          <div class="slider-label">Observed Proportion (p̂): <span id="p_val">0.24</span></div>
+          <input type="range" min="5" max="95" value="24" step="1" id="p_slider" oninput="updateCI()">
+        </div>
+        <div class="result-box" id="ci_result">
+          <div class="r-label">Confidence Interval</div>
+          <div class="r-value" id="ci_range">—</div>
+          <div style="margin-top:8px; font-size:12px; color:#9a8f82;" id="ci_interpretation">—</div>
+        </div>
+      </div>
+      <div>
+        <div class="cw" style="margin:0; height:100%;">
+          <canvas id="ciInteractive" style="max-height:260px;"></canvas>
+          <div class="cw-label">CI width shown as the bracket. Center = your estimate. Try making n very large.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">The Brutal Truth About Sample Size</div>
+    <p>Here's something that surprises everyone: to make your confidence interval <strong>half as wide</strong>, you need <strong>4 times as many users</strong>. This is because of the square root in the formula.</p>
+
+    <table class="tbl">
+      <thead><tr><th>Sample Size (n)</th><th>Standard Error (σ=0.5)</th><th>95% CI Width</th><th>vs n=100</th></tr></thead>
+      <tbody>
+        <tr><td>100</td><td>0.050</td><td>±0.098 (19.6%)</td><td style="color:var(--muted);">—</td></tr>
+        <tr><td>400</td><td>0.025</td><td>±0.049 (9.8%)</td><td style="color:var(--green);">Half as wide</td></tr>
+        <tr><td>1,600</td><td>0.013</td><td>±0.025 (4.9%)</td><td style="color:var(--green);">Quarter as wide</td></tr>
+        <tr><td>10,000</td><td>0.005</td><td>±0.010 (2.0%)</td><td style="color:var(--green);">1/10th as wide</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout tip">
+      <div class="callout-tag">🎯 Why This Matters at Google or Facebook</div>
+      <p>Running an experiment on 1 million users means delaying a feature launch for potentially millions of users, and tying up engineering resources. A data scientist who says "we can get 80% of the precision at 25% of the cost if we accept a slightly wider CI" — that's someone who understands the real-world trade-offs and will be invaluable to a team.</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════ PANEL 05 ══ -->
+<div id="panel-ab1" class="panel">
+  <div class="section-label">A/B Testing · Part 1</div>
+  <div class="section-title">What is A/B Testing,<br>really?</div>
+  <div class="section-desc">Every major tech company lives and dies by A/B testing. Let's understand it from first principles — no jargon, just the core idea.</div>
+
+  <div class="card">
+    <div class="card-title">The Core Problem A/B Testing Solves</div>
+    <p>Imagine you work at Spotify. Your team changes the color of the "Play" button from green to blue. The next week, users play 8% more songs. Was it the button color? Or was it because a famous artist released an album that week? Or because it was the weekend?</p>
+
+    <div class="callout warn">
+      <div class="callout-tag">⚠️ The Big Problem: Correlation vs Causation</div>
+      <p>Without a controlled experiment, you <strong>cannot know if your change caused the improvement</strong>. Maybe engagement goes up every spring. Maybe a competitor went down. Maybe it's just random variation. You can observe that two things happened together (correlation), but you can't prove one caused the other.</p>
+    </div>
+
+    <p>A/B testing solves this by running <strong>both versions simultaneously</strong> on randomly split user groups. Because both groups are exposed at the same time under the same conditions, the ONLY systematic difference between them is the thing you changed.</p>
+
+    <div class="analogy">
+      <div class="analogy-tag">🌱 Analogy — The Farmer's Experiment</div>
+      <p>A farmer wants to know if a new fertilizer actually helps plants grow. He could use the new fertilizer this year and compare to last year's harvest. But what if this year had more rain? More sun? Different pests? He can't know if it was the fertilizer or the weather.</p>
+      <p style="margin-top:8px;">The right approach: take one field, divide it in half. Use the new fertilizer on the left half, old fertilizer on the right half. Same weather. Same soil. Same time. <strong>Now if the left half grows better, it was definitely the fertilizer.</strong> That's an A/B test.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">How A/B Testing Works — The Big Picture</div>
+
+    <div class="flow">
+      <div class="flow-node highlight"><div class="fn-num">START</div><div class="fn-text">All Users Arrive</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node"><div class="fn-num">STEP 1</div><div class="fn-text">Random Split (50/50)</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node"><div class="fn-num">GROUP A</div><div class="fn-text">Control (old version)</div></div>
+      <div class="flow-arrow">+</div>
+      <div class="flow-node"><div class="fn-num">GROUP B</div><div class="fn-text">Treatment (new version)</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node"><div class="fn-num">STEP 3</div><div class="fn-text">Measure Metric</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node highlight"><div class="fn-num">RESULT</div><div class="fn-text">Statistical Test</div></div>
+    </div>
+
+    <div class="g2" style="margin-top:20px;">
+      <div class="story">
+        <div class="story-company">🅰️ Group A — Control</div>
+        <p>Sees the current, unchanged version of your product. This is your baseline. Whatever their behavior is, that's what you compare against.</p>
+        <p style="margin-top:10px;">Think of this as the "do nothing" option. If you never ran this experiment, all users would behave like Group A.</p>
+      </div>
+      <div class="story">
+        <div class="story-company">🅱️ Group B — Treatment</div>
+        <p>Sees the new version with your one change. If their behavior differs from Group A's in a statistically significant way, your change caused it.</p>
+        <p style="margin-top:10px;">This is the "what if" option. Group B shows you what would happen if you shipped the change to everyone.</p>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <div class="callout-tag">💡 Why Random Assignment is Critical</div>
+      <p>You must assign users to groups <em>randomly</em>. If you put all iPhone users in Group B and Android users in Group A, any difference you measure might be about phone type, not your change. Random assignment ensures that on average, both groups are identical in every way except what you're testing.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Real Examples from Major Companies</div>
+
+    <div class="g2">
+      <div class="story">
+        <div class="story-company">📧 Obama Campaign (2008)</div>
+        <p>Tested different email subject lines for fundraising. One subject line outperformed others by 40% in donations. A/B testing helped raise an estimated $60 million in additional donations. This is probably the most famous A/B test in political history.</p>
+      </div>
+      <div class="story">
+        <div class="story-company">🔴 Netflix</div>
+        <p>Tests different thumbnail images for shows and movies. The same show can have dozens of different thumbnails simultaneously shown to different user groups. Netflix attributes significant engagement improvements to their aggressive thumbnail testing program.</p>
+      </div>
+      <div class="story">
+        <div class="story-company">🔍 Google</div>
+        <p>Once tested 41 different shades of blue for their toolbar links to find which shade generated the most clicks. They run an estimated 10,000+ A/B tests per year. Almost every change to Google Search has been A/B tested.</p>
+      </div>
+      <div class="story">
+        <div class="story-company">📦 Amazon</div>
+        <p>Tests everything from button placement to product description formats to checkout flows. Jeff Bezos famously said A/B testing is one of the most important drivers of Amazon's product improvement process.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════ PANEL 06 ══ -->
+<div id="panel-ab2" class="panel">
+  <div class="section-label">A/B Testing · Part 2</div>
+  <div class="section-title">Setting up an A/B test<br>the right way</div>
+  <div class="section-desc">Before you run a single experiment, you need to define several things clearly. Poorly defined experiments give useless — or worse, misleading — results.</div>
+
+  <div class="card">
+    <div class="card-title">Step 1 — Define Your Hypothesis (Before Looking at Any Data)</div>
+    <p>Every A/B test starts with a clear, written-down hypothesis. This isn't optional. If you define your hypothesis <em>after</em> seeing the data, you're cheating — you'll unconsciously choose the hypothesis that the data already supports.</p>
+
+    <div class="definition">
+      <div class="definition-word">Null Hypothesis (H₀)</div>
+      <p>The "skeptical" baseline. Assumes your change had no effect. "The new button color produces the same click rate as the old one."</p>
+    </div>
+    <div class="definition" style="background:var(--green-soft); border-color:rgba(26,122,74,0.2);">
+      <div class="definition-word" style="color:var(--green);">Alternative Hypothesis (H₁)</div>
+      <p>What you're trying to prove. "The new button color produces a different (or higher) click rate than the old one."</p>
+    </div>
+
+    <div class="analogy">
+      <div class="analogy-tag">⚖️ Analogy — The Court of Law</div>
+      <p>Think of it like a criminal trial. The null hypothesis is "innocent until proven guilty." You need strong evidence (low p-value) to reject the null and conclude something changed. The burden of proof is on the data.</p>
+      <p style="margin-top:8px;">Just like a jury doesn't say "definitely innocent" when they acquit — they say "not enough evidence to convict" — in statistics, you never "accept" H₀, you just "fail to reject" it.</p>
+    </div>
+
+    <div class="formula">
+      <span class="comment">// Typical A/B test hypothesis setup</span><br>
+      H₀: p_treatment = p_control    <span class="comment">→ no difference in conversion rate</span><br>
+      H₁: p_treatment ≠ p_control   <span class="comment">→ some difference exists (two-tailed)</span><br>
+          OR<br>
+      H₁: p_treatment > p_control   <span class="comment">→ treatment is specifically better (one-tailed)</span><br><br>
+      <span class="comment">// Use two-tailed when direction is unknown, one-tailed when you</span><br>
+      <span class="comment">// specifically predict improvement (and you must commit before the test)</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Step 2 — Choose Your Metric Carefully</div>
+    <p>Not all metrics are created equal. Choosing the wrong metric can make a harmful change look beneficial. You need three types of metrics for every serious experiment:</p>
+
+    <table class="tbl">
+      <thead><tr><th>Metric Type</th><th>What It Is</th><th>Example</th><th>Role in Decision</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><span class="tag tag-blue">Primary</span></td>
+          <td style="font-size:14px;">The single most important thing you're trying to improve. Your north star for this test.</td>
+          <td style="font-size:14px; color:var(--ink3);">Conversion rate, revenue per user, day-7 retention</td>
+          <td style="font-size:14px;">This decides go / no-go. Pre-specify ONE primary metric.</td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-amber">Guardrail</span></td>
+          <td style="font-size:14px;">Metrics that should NOT get worse. Safety checks to prevent you from shipping something harmful.</td>
+          <td style="font-size:14px; color:var(--ink3);">App crash rate, support ticket volume, unsubscribe rate</td>
+          <td style="font-size:14px;">If any guardrail fails, don't ship — even if primary looks great.</td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-green">Secondary</span></td>
+          <td style="font-size:14px;">Additional metrics that help you understand <em>why</em> the primary metric moved.</td>
+          <td style="font-size:14px; color:var(--ink3);">Time on page, scroll depth, feature adoption rate</td>
+          <td style="font-size:14px;">Diagnostic only. Don't use for the final go/no-go call.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout warn">
+      <div class="callout-tag">⚠️ Real Scenario: When Primary Wins But Guardrail Fails</div>
+      <p><strong>What happened:</strong> A team tests an aggressive push notification strategy. Primary metric (DAU) goes up 4%. Great! But support tickets for "too many notifications" triple. Unsubscribe rate doubles.</p>
+      <p style="margin-top:8px;"><strong>What should happen:</strong> Don't ship. Short-term engagement gains are not worth destroying the user relationship. The guardrail metrics caught a serious problem the primary metric missed.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Step 3 — Ensure Groups Are Truly Random and Equal</div>
+    <p>The whole validity of an A/B test rests on one assumption: <strong>the two groups are comparable</strong> except for the thing you're testing. Randomization is how you achieve this.</p>
+
+    <div class="g2">
+      <div>
+        <p>Things that must be balanced between groups:</p>
+        <ul style="margin-top:8px;">
+          <li>Demographics (age, gender, location)</li>
+          <li>Device type (mobile vs desktop)</li>
+          <li>Account age (new vs veteran users)</li>
+          <li>Usage patterns (heavy vs light users)</li>
+          <li>Time of sign-up within the experiment</li>
+        </ul>
+        <p style="margin-top:12px;">With true random assignment and large enough samples, the <strong>law of large numbers</strong> ensures these balance out automatically — no manual matching needed.</p>
+      </div>
+      <div class="story">
+        <div class="story-company">🚨 What Can Go Wrong: SRM</div>
+        <p>Sample Ratio Mismatch (SRM) happens when your actual split (say 47%/53%) differs from your planned split (50%/50%). This suggests a bug in your randomization — maybe the new version crashes on Android and those users bail out before being counted.</p>
+        <p style="margin-top:8px;"><strong>How to detect:</strong> Run a chi-square test on the actual vs expected group sizes. If p &lt; 0.05, you have SRM — <strong>stop, don't analyze results, fix the bug first.</strong></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════ PANEL 07 ══ -->
+<div id="panel-ab3" class="panel">
+  <div class="section-label">A/B Testing · Part 3</div>
+  <div class="section-title">How many users<br>do you actually need?</div>
+  <div class="section-desc">One of the most common interview questions. Running an underpowered test is like flipping a coin twice and concluding it's fair — not enough data to know anything reliable.</div>
+
+  <div class="card">
+    <div class="card-title">The Problem With Too Little Data</div>
+    <p>Imagine you flip a coin 4 times and get 3 heads. Does that mean the coin is biased? Maybe — but with only 4 flips, you don't have enough data to say anything confidently. You'd need many more flips to know for sure.</p>
+    <p>The same principle applies to A/B tests. If you test on 50 users per group, even a real improvement might not show up as statistically significant — simply because you didn't have enough data to detect it.</p>
+
+    <div class="callout warn">
+      <div class="callout-tag">⚠️ The Two Types of "Wrong" in Underpowered Tests</div>
+      <p><strong>Type I Error (False Positive):</strong> You declare a winner when there's actually no real difference. You ship a change that does nothing — or hurts users.</p>
+      <p style="margin-top:8px;"><strong>Type II Error (False Negative):</strong> You declare "no difference" when there actually IS a real improvement. You throw away a feature that would have helped users, just because your test didn't have enough data to detect the improvement.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Power Analysis — Calculating Sample Size Before the Test</div>
+
+    <div class="definition">
+      <div class="definition-word">Statistical Power</div>
+      <p>The probability that your test will correctly detect a real effect when it exists. Standard industry requirement: 80% power. This means if there's a real difference, your test has an 80% chance of finding it.</p>
+    </div>
+
+    <p>Before running any A/B test, you need to decide on four things:</p>
+
+    <div class="step-list">
+      <div class="step-item">
+        <div class="step-circle blue">1</div>
+        <div class="step-content">
+          <strong>Significance Level (α) — How Often Can You Be Wrong?</strong>
+          <p>Standard: α = 0.05. This means you accept a 5% chance of incorrectly declaring a winner when nothing actually changed. Lower α = stricter = fewer false positives = needs more data.</p>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-circle amber">2</div>
+        <div class="step-content">
+          <strong>Power (1−β) — How Sensitive Is Your Test?</strong>
+          <p>Standard: 80% power. This means you have an 80% chance of detecting a real effect. Higher power = fewer missed improvements = needs more data.</p>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-circle green">3</div>
+        <div class="step-content">
+          <strong>Baseline Metric — What's the Current Rate?</strong>
+          <p>What does your metric look like today, before any change? e.g., current conversion rate = 10%. You get this from historical data.</p>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-circle" style="background:var(--red);">4</div>
+        <div class="step-content">
+          <strong>Minimum Detectable Effect (MDE) — What Change Actually Matters?</strong>
+          <p>This is the most important and most overlooked input. You need to decide: <em>"What is the smallest improvement that would be worth shipping?"</em></p>
+          <div class="detail" style="border-left-color:var(--red);">
+            If conversion is 10% and you'd only ship for a 2%+ lift, your MDE = 2 percentage points (not 2% of 10% — be careful here). Smaller MDE means you're trying to detect subtler changes, which requires much more data.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="formula">
+      <span class="comment">// Sample size formula for comparing two proportions</span><br>
+      n ≈ 2 × (z_{α/2} + z_β)² × p̄(1−p̄) / δ²<br><br>
+      <span class="highlight">z_{α/2}</span> = 1.96 for α=0.05 (critical value for significance)<br>
+      <span class="highlight">z_β</span>    = 0.84 for 80% power<br>
+      <span class="highlight">p̄</span>      = average of control and treatment proportions<br>
+      <span class="highlight">δ</span>      = minimum detectable effect (the difference you care about)<br><br>
+      <span class="comment">// Result: n is the number needed PER GROUP (multiply by 2 for total)</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Interactive Power Calculator</div>
+    <p>Adjust the values below to see how sample size requirements change:</p>
+    <div class="g2">
+      <div>
+        <div class="slider-group">
+          <div class="slider-label">Baseline Rate (p₀): <span id="p0_val">10</span>%</div>
+          <input type="range" min="1" max="50" value="10" id="p0_slider" oninput="updatePower()">
+        </div>
+        <div class="slider-group">
+          <div class="slider-label">Minimum Detectable Effect: <span id="mde_val">2</span> pp</div>
+          <input type="range" min="1" max="15" value="2" step="0.5" id="mde_slider" oninput="updatePower()">
+        </div>
+        <div class="slider-group">
+          <div class="slider-label">Power Target: <span id="pow_val">80</span>%</div>
+          <input type="range" min="70" max="95" value="80" id="pow_slider" oninput="updatePower()">
+        </div>
+        <div class="result-box" id="power_result">
+          <div class="r-label">Sample Size Per Group</div>
+          <div class="r-value" id="sample_size">—</div>
+          <div style="margin-top:6px; font-size:12px; color:#9a8f82;" id="power_days">—</div>
+        </div>
+      </div>
+      <div>
+        <div class="cw" style="margin:0; height:100%;">
+          <canvas id="powerCurve" style="max-height:260px;"></canvas>
+          <div class="cw-label">Sample size needed vs Minimum Detectable Effect.<br>Notice how sample size explodes as MDE gets smaller.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">How Long Should You Run the Test?</div>
+    <p>You have your sample size target. Now — how many days do you run the experiment? It's not just "run until you hit n." There are three things to think about:</p>
+
+    <div class="g3">
+      <div class="tile">
+        <div class="tile-label">Business Cycles</div>
+        <p style="font-size:13.5px; margin-top:6px;">Always run for at least <strong>1–2 full weeks</strong>. User behavior on Monday is different from Saturday. You need to capture full weekly patterns. A test run only on weekdays will give biased results.</p>
+      </div>
+      <div class="tile">
+        <div class="tile-label">Novelty Effect</div>
+        <p style="font-size:13.5px; margin-top:6px;">When users first see something new, they interact with it out of pure curiosity — then engagement drops back to normal. If you stop the test too early (before this "novelty bump" fades), you'll overestimate the improvement.</p>
+      </div>
+      <div class="tile">
+        <div class="tile-label">Never Peek Early</div>
+        <p style="font-size:13.5px; margin-top:6px;">Looking at results mid-experiment and stopping when you see p &lt; 0.05 is called "peeking" — and it's a major statistical sin. Your false positive rate can jump from 5% to 25%+ if you check frequently.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════ PANEL 08 ══ -->
+<div id="panel-ab4" class="panel">
+  <div class="section-label">A/B Testing · Part 4</div>
+  <div class="section-title">Reading and interpreting<br>your results</div>
+  <div class="section-desc">The experiment is done. Now what? Here's exactly how to analyze results and — most importantly — what NOT to conclude.</div>
+
+  <div class="card">
+    <div class="card-title">The Z-Test for Two Proportions</div>
+    <p>The most common A/B test compares two proportions — conversion rates, click rates, retention rates. After the experiment, you use a Z-test to determine if the difference between the two groups is statistically significant or just random noise.</p>
+
+    <div class="formula blue">
+      <span class="comment">// Step 1: Calculate the pooled proportion</span><br>
+      p̂_pooled = (successes_A + successes_B) / (n_A + n_B)<br><br>
+      <span class="comment">// Step 2: Calculate the standard error of the difference</span><br>
+      SE = √[ p̂_pooled × (1 − p̂_pooled) × (1/n_A + 1/n_B) ]<br><br>
+      <span class="comment">// Step 3: Calculate the Z-score</span><br>
+      Z = (p̂_B − p̂_A) / SE<br><br>
+      <span class="comment">// Step 4: Decision</span><br>
+      |Z| > 1.96 → reject H₀ → <span class="highlight">statistically significant result</span><br>
+      |Z| ≤ 1.96 → fail to reject H₀ → <span class="highlight">no significant difference detected</span>
+    </div>
+
+    <div class="callout info">
+      <div class="callout-tag">💡 Why Pooled Proportion?</div>
+      <p>We pool the proportions from both groups because we're testing under the assumption that H₀ is true — meaning both groups come from the same population. Combining them gives us a better (more precise) estimate of the common "true" proportion under H₀.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">The P-Value — Plain English Explanation</div>
+    <p>After running the Z-test, you get a p-value. This is the single most misunderstood number in all of statistics. Let's nail it.</p>
+
+    <div class="quote-block">
+      <p>"The p-value is the probability of seeing a difference as large as yours (or larger), assuming there was actually no real difference at all."</p>
+    </div>
+
+    <p>In other words: <em>How surprising is your data, if we assumed H₀ was true?</em></p>
+    <p>A small p-value means: "This data would be really rare if nothing had actually changed — so something probably did change."</p>
+    <p>A large p-value means: "This data is pretty normal even if nothing changed — so we can't rule out random chance."</p>
+
+    <div class="versus">
+      <div class="vs-box wrong">
+        <div class="vs-title">❌ WRONG Interpretation</div>
+        <p>"The p-value is the probability that H₀ is true."</p>
+        <p style="margin-top:8px;">"A p-value of 0.03 means there's a 3% chance the null hypothesis is correct."</p>
+        <p style="margin-top:8px;">This is wrong — and interviewers specifically probe for this mistake.</p>
+      </div>
+      <div class="vs-label">vs</div>
+      <div class="vs-box right">
+        <div class="vs-title">✅ CORRECT Interpretation</div>
+        <p>"The p-value is the probability of observing this result (or more extreme) IF the null hypothesis were true."</p>
+        <p style="margin-top:8px;">"A p-value of 0.03 means: if there were truly no effect, we'd only see a difference this large 3% of the time by random chance."</p>
+      </div>
+    </div>
+
+    <div class="cw">
+      <canvas id="pvalueChart" style="max-height:260px;"></canvas>
+      <div class="cw-label">The p-value is the area in the tail(s) beyond your Z-score.<br>Shaded red area = p-value. When this is small (&lt;0.05), we reject H₀.</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Statistical Significance vs Practical Significance</div>
+    <p>This distinction is <em>crucial</em> and often overlooked. A result can be statistically significant but practically meaningless — and vice versa.</p>
+
+    <div class="g2">
+      <div class="story">
+        <div class="story-company">📊 Statistically Significant but NOT Practically Significant</div>
+        <p>You test a new recommendation algorithm on 10 million users. Conversion rate improves from 12.000% to 12.001%. With 10M users, this is statistically significant (tiny p-value). But is a 0.001% improvement worth re-engineering your entire recommendation system? Almost certainly not.</p>
+        <p style="margin-top:10px; font-size:13.5px; color:var(--red);">Large sample sizes can make even trivial differences "significant."</p>
+      </div>
+      <div class="story">
+        <div class="story-company">📊 Practically Significant but NOT Statistically Significant</div>
+        <p>You test a new checkout flow on 30 users per group. Conversion goes from 10% to 25% — a massive 15 percentage point improvement! But with only 30 users, this does not reach statistical significance. With more data, it almost certainly would.</p>
+        <p style="margin-top:10px; font-size:13.5px; color:var(--amber);">Small sample sizes can hide even real, large effects.</p>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <div class="callout-tag">🎯 Interview Answer Template</div>
+      <p>When asked "is this result significant?", always address BOTH:</p>
+      <p style="margin-top:8px;">1. <strong>Statistical significance:</strong> "The p-value is 0.02, which is below our threshold of α=0.05, so the result is statistically significant."</p>
+      <p style="margin-top:4px;">2. <strong>Practical significance:</strong> "The effect size is a 3.2 percentage point improvement in conversion, which exceeds our MDE of 2pp and translates to approximately $2.4M additional annual revenue."</p>
+      <p style="margin-top:8px;">Answering both makes you sound like someone who has actually shipped products, not just passed statistics exams.</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════ PANEL 09 ══ -->
+<div id="panel-ab5" class="panel">
+  <div class="section-label">A/B Testing · Part 5</div>
+  <div class="section-title">The pitfalls that sink<br>even experienced teams</div>
+  <div class="section-desc">These are the mistakes that produce bad decisions even when the statistics look right. Knowing these makes you look like someone with real field experience.</div>
+
+  <div class="card">
+    <div class="card-title"><span class="num">1</span> The Peeking Problem</div>
+    <p>You launch a test. Three days in, you check results. You see p = 0.04. Exciting! You stop the test and declare a winner.</p>
+    <p>This is one of the most common — and most damaging — mistakes in A/B testing.</p>
+
+    <div class="cw">
+      <canvas id="peekingChart" style="max-height:240px;"></canvas>
+      <div class="cw-label">P-value over time for a test where the TRUE effect is zero (no difference exists).<br>Notice how it dips below 0.05 multiple times due to random chance before stabilizing.</div>
+    </div>
+
+    <p>When you repeatedly check a running test and stop it as soon as you see significance, your <strong>actual false positive rate explodes</strong>:</p>
+    <table class="tbl">
+      <thead><tr><th>How often you peek</th><th>Your actual false positive rate</th></tr></thead>
+      <tbody>
+        <tr><td>Check once (at the end)</td><td style="color:var(--green);">5% (as intended)</td></tr>
+        <tr><td>Check twice</td><td style="color:var(--amber);">8.3%</td></tr>
+        <tr><td>Check 5 times</td><td style="color:var(--amber);">14.2%</td></tr>
+        <tr><td>Check every day for 20 days</td><td style="color:var(--red); font-weight:600;">25%+</td></tr>
+      </tbody>
+    </table>
+    <div class="callout good">
+      <div class="callout-tag">✅ The Fix</div>
+      <p>Commit to your sample size <em>before</em> the test starts. Don't look at significance values mid-experiment. If you absolutely need interim looks (for very long tests), use Sequential Testing methods like the alpha-spending function, which are designed for this purpose.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="num">2</span> Multiple Testing Problem</div>
+    <p>Your A/B test tracks 20 different metrics. At α=0.05, even if your change did absolutely nothing, you'd expect to see <strong>1 metric appear significant purely by chance</strong>. If you then say "look, metric #14 improved!", you're fooling yourself.</p>
+
+    <div class="formula">
+      <span class="comment">// Probability of at least one false positive in m tests</span><br>
+      P(false positive) = 1 − (1 − α)^m<br><br>
+      m=1:  1 − 0.95^1  = <span class="highlight">5.0%</span>    ← intended<br>
+      m=5:  1 − 0.95^5  = <span class="highlight">22.6%</span>   ← 4× higher than intended!<br>
+      m=10: 1 − 0.95^10 = <span class="highlight">40.1%</span>   ← nearly coin flip<br>
+      m=20: 1 − 0.95^20 = <span class="highlight">64.2%</span>   ← you'll almost certainly find something
+    </div>
+
+    <p><strong>The Bonferroni Correction:</strong> If you must test m metrics, use α* = α/m as your threshold. Testing 20 metrics at α=0.05? Use α* = 0.05/20 = 0.0025 as your significance threshold instead. This keeps your overall false positive rate at 5%.</p>
+
+    <div class="callout tip">
+      <div class="callout-tag">🎯 Best Practice</div>
+      <p>Pre-specify exactly ONE primary metric before the test. Use other metrics only for understanding (diagnosis), not for the final go/no-go decision. This eliminates the multiple testing problem entirely for your main decision.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="num">3</span> Network Effects & User Interference</div>
+    <p>Standard A/B tests assume users in Group A and users in Group B don't interact with each other. This is called the "Stable Unit Treatment Value Assumption" (SUTVA). On many platforms, this assumption breaks down.</p>
+
+    <div class="g2">
+      <div class="story">
+        <div class="story-company">🚗 Uber Example</div>
+        <p>You test a new driver incentive on 50% of drivers (Group B). Group B drivers work more hours to earn the incentive. This means fewer rides are available for Group A drivers, who earn less. Group A's behavior changed — not because of any treatment, but because Group B's behavior affected them. Your control group is contaminated.</p>
+      </div>
+      <div class="story">
+        <div class="story-company">👥 Facebook Example</div>
+        <p>You test a new notification for 50% of users. Those users (Group B) interact more with Group A users. Group A users respond more because they're receiving more interactions. Group A's engagement goes up — not because of any treatment — making your treatment look less effective than it actually is (or your control group better than it actually is).</p>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <div class="callout-tag">💡 Solution: Geo-Based or Cluster Randomization</div>
+      <p>Instead of randomly assigning individual users, randomize by <strong>geographic regions</strong> or <strong>social clusters</strong>. For example, Uber tests by city: drivers in Chicago get treatment, drivers in Denver are control. This way, the groups don't interfere with each other because they're geographically separated.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="num">4</span> Simpson's Paradox</div>
+    <p>This one is mind-bending. Simpson's Paradox is when a trend that appears in your aggregate results <em>reverses</em> when you look at subgroups. This can make a harmful treatment look beneficial at first glance.</p>
+
+    <div class="cw">
+      <canvas id="simpsonChart" style="max-height:260px;"></canvas>
+      <div class="cw-label">Treatment appears to win overall (green bar higher), but loses in BOTH subgroups (mobile and desktop).<br>This is Simpson's Paradox — the aggregate hides the truth.</div>
+    </div>
+
+    <div class="analogy">
+      <div class="analogy-tag">💊 Classic Real-World Example — UC Berkeley Admissions (1973)</div>
+      <p>At first glance, UC Berkeley's data showed that men were admitted at a higher rate than women (44% vs 35%) — suggesting gender bias against women. But when researchers looked at individual departments, women were actually admitted at slightly higher rates than men in most departments.</p>
+      <p style="margin-top:8px;">What happened? Women were applying to more competitive departments with lower overall acceptance rates. The aggregated number hid the opposite truth. This is Simpson's Paradox at work.</p>
+    </div>
+
+    <div class="callout warn">
+      <div class="callout-tag">⚠️ Always Segment Your Results</div>
+      <p>After any A/B test, don't just look at aggregate results. Break down by key segments: mobile vs desktop, new vs returning users, geographic regions, age groups. A "winning" change overall might be actively hurting an important user segment.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="num">5</span> Survivorship Bias & Novelty Effect</div>
+    <div class="g2">
+      <div>
+        <p><strong>Novelty Effect:</strong> When users see something new, they interact with it out of curiosity. Engagement spikes temporarily — then settles back to its real long-term level. If you stop the test during the spike, you overestimate the long-term benefit.</p>
+        <p style="margin-top:12px;"><strong>Fix:</strong> Run the test long enough for the novelty to wear off. Monitor how the effect evolves over time. A feature that looks great in week 1 but flat in week 3 might just be a novelty, not a genuine improvement.</p>
+      </div>
+      <div>
+        <p><strong>Survivorship Bias:</strong> If users who have a bad experience leave your product entirely, you might not see their negative signal — they're gone from your dataset. The users remaining in your test might be a self-selected "survivor" group.</p>
+        <p style="margin-top:12px;"><strong>Example:</strong> A new, complex feature drives away casual users. The remaining users (who stayed) engage more — but your total user base shrinks. Looking only at engagement of remaining users shows a false positive.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════ PANEL 10 ══ -->
+<div id="panel-ab6" class="panel">
+  <div class="section-label">A/B Testing · Part 6</div>
+  <div class="section-title">Full worked example:<br>Twitter onboarding</div>
+  <div class="section-desc">We're going to run through a complete A/B test from hypothesis to business recommendation — exactly as you'd present it in an interview. Every step, every number, explained.</div>
+
+  <div class="card">
+    <div class="card-title">The Business Problem</div>
+    <div class="story">
+      <div class="story-company">🐦 Twitter / X — Onboarding Team</div>
+      <p>Twitter's growth team notices that most users who sign up never come back after day 1. The PM has a hypothesis: the current onboarding flow asks new users to do too much at once (follow 10 accounts, set up profile, confirm email all in one session). The team built a simpler onboarding flow that focuses on just one thing: following 5 accounts in a relevant category. They want to know: does the simplified flow improve day-7 retention?</p>
+    </div>
+    <div class="g3" style="margin-top:20px;">
+      <div class="tile">
+        <div class="tile-label">Current Day-7 Retention</div>
+        <div class="tile-value" style="color:var(--red);">30%</div>
+        <p>Only 3 in 10 new users return after 7 days</p>
+      </div>
+      <div class="tile">
+        <div class="tile-label">Minimum Detectable Effect</div>
+        <div class="tile-value" style="color:var(--blue);">+2pp</div>
+        <p>A 2 percentage-point lift (to 32%) is worth shipping</p>
+      </div>
+      <div class="tile">
+        <div class="tile-label">Daily New Sign-Ups Available</div>
+        <div class="tile-value" style="color:var(--green);">50,000</div>
+        <p>Users available per day to randomize into the test</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Step 1 — Define Hypotheses and Metrics</div>
+
+    <div class="g2">
+      <div>
+        <div class="formula" style="margin-top:0;">
+          H₀: p_new = p_old = 0.30<br>
+          <span class="comment">→ simplified onboarding has no effect</span><br><br>
+          H₁: p_new > p_old<br>
+          <span class="comment">→ simplified onboarding improves retention</span><br><br>
+          α = 0.05, Power = 80%, MDE = 2pp
+        </div>
+        <p>We chose a <strong>one-tailed test</strong> here because we specifically believe the new flow will <em>improve</em> retention — not just change it. We committed to this direction before the test.</p>
+      </div>
+      <div>
+        <p><strong>Metrics defined before the test:</strong></p>
+        <ul style="margin-top:8px;">
+          <li><span class="tag tag-blue">Primary:</span> Day-7 retention rate</li>
+          <li style="margin-top:8px;"><span class="tag tag-amber">Guardrail:</span> Time-to-first-tweet (shouldn't increase), support tickets ("can't complete onboarding"), app crash rate</li>
+          <li style="margin-top:8px;"><span class="tag tag-green">Secondary:</span> Day-1 retention, number of accounts followed in first session, email confirmation rate</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Step 2 — Calculate Required Sample Size</div>
+
+    <div class="formula blue">
+      <span class="comment">// Known values</span><br>
+      p_control  = 0.30   <span class="comment">→ current retention rate</span><br>
+      p_treatment = 0.32  <span class="comment">→ target after +2pp MDE</span><br>
+      p̄          = (0.30 + 0.32)/2 = 0.31<br>
+      z_{α/2}    = 1.645  <span class="comment">→ one-tailed test at α=0.05</span><br>
+      z_β        = 0.84   <span class="comment">→ 80% power</span><br>
+      δ          = 0.02   <span class="comment">→ MDE = 2 percentage points</span><br><br>
+      <span class="comment">// Sample size calculation</span><br>
+      n = 2 × (1.645 + 0.84)² × 0.31 × 0.69 / (0.02)²<br>
+        = 2 × (2.485)² × 0.2139 / 0.0004<br>
+        = 2 × 6.175 × 0.2139 / 0.0004<br>
+        = <span class="highlight">6,611 users per group</span>
+    </div>
+
+    <p>With 50,000 new users per day and a 50/50 split, we get 25,000 per group per day. We need 6,611 per group — less than 1 day of data technically. But we should still run for <strong>14 days minimum</strong> (2 full weeks) to account for day-of-week effects and novelty.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Step 3 — Run the Experiment (Results After 14 Days)</div>
+
+    <div class="g2" style="margin-top:8px;">
+      <div style="background:var(--red-soft); border:1px solid rgba(192,57,43,0.2); border-radius:12px; padding:24px;">
+        <div style="font-family:'Fira Code',monospace; font-size:11px; color:var(--red); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:12px;">🅰️ Control Group — Old Onboarding</div>
+        <div style="font-family:'Fraunces',serif; font-size:14px; color:var(--ink3); margin-bottom:6px;">Users enrolled</div>
+        <div style="font-family:'Fraunces',serif; font-size:36px; font-weight:700; color:var(--ink); line-height:1;">25,000</div>
+        <div style="margin-top:14px; font-family:'Fraunces',serif; font-size:14px; color:var(--ink3);">Users who returned on day 7</div>
+        <div style="font-family:'Fraunces',serif; font-size:36px; font-weight:700; color:var(--red); line-height:1;">7,320</div>
+        <div style="margin-top:10px; font-family:'Fira Code',monospace; font-size:14px; color:var(--ink);">p̂_A = 7,320 / 25,000 = <strong>29.28%</strong></div>
+      </div>
+      <div style="background:var(--green-soft); border:1px solid rgba(26,122,74,0.2); border-radius:12px; padding:24px;">
+        <div style="font-family:'Fira Code',monospace; font-size:11px; color:var(--green); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:12px;">🅱️ Treatment Group — New Onboarding</div>
+        <div style="font-family:'Fraunces',serif; font-size:14px; color:var(--ink3); margin-bottom:6px;">Users enrolled</div>
+        <div style="font-family:'Fraunces',serif; font-size:36px; font-weight:700; color:var(--ink); line-height:1;">25,000</div>
+        <div style="margin-top:14px; font-family:'Fraunces',serif; font-size:14px; color:var(--ink3);">Users who returned on day 7</div>
+        <div style="font-family:'Fraunces',serif; font-size:36px; font-weight:700; color:var(--green); line-height:1;">8,150</div>
+        <div style="margin-top:10px; font-family:'Fira Code',monospace; font-size:14px; color:var(--ink);">p̂_B = 8,150 / 25,000 = <strong>32.60%</strong></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Step 4 — Run the Z-Test</div>
+
+    <div class="formula blue">
+      <span class="comment">// Step 1: Pooled proportion</span><br>
+      p̂_pooled = (7,320 + 8,150) / (25,000 + 25,000)<br>
+               = 15,470 / 50,000 = <span class="highlight">0.3094</span><br><br>
+      <span class="comment">// Step 2: Standard Error</span><br>
+      SE = √[ 0.3094 × (1 − 0.3094) × (1/25,000 + 1/25,000) ]<br>
+         = √[ 0.3094 × 0.6906 × 0.00008 ]<br>
+         = √[ 0.00001710 ]<br>
+         = <span class="highlight">0.004135</span><br><br>
+      <span class="comment">// Step 3: Z-score</span><br>
+      Z = (0.3260 − 0.2928) / 0.004135<br>
+        = 0.0332 / 0.004135<br>
+        = <span class="highlight">8.03</span><br><br>
+      <span class="comment">// Step 4: Decision</span><br>
+      Z = 8.03 >> 1.645 (critical value) → <span class="highlight">Reject H₀ ✓</span><br>
+      p-value ≈ 0.000000000001 (essentially zero)
+    </div>
+
+    <div class="cw">
+      <canvas id="twitterResult" style="max-height:240px;"></canvas>
+      <div class="cw-label">Our Z-score of 8.03 is astronomically far past the critical value of 1.645.<br>The shaded green area = our result. The red area = rejection region boundary.</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Step 5 — Business Recommendation</div>
+    <div style="background:var(--ink); color:#f7f4ef; border-radius:14px; padding:32px;">
+      <div style="font-family:'Fira Code',monospace; font-size:11px; color:#c8a96e; letter-spacing:0.15em; text-transform:uppercase; margin-bottom:14px;">📋 Interview-Ready Recommendation</div>
+      <p style="color:#e2d8cc; font-size:16px; line-height:1.9;">"The simplified onboarding flow shows a <strong style="color:#c8f0a0;">statistically significant improvement</strong> in day-7 retention: 32.6% versus 29.3% in the control group. The Z-score of 8.03 is far above our critical value of 1.645, with an essentially zero p-value — this result is not due to random chance.</p>
+      <p style="color:#e2d8cc; font-size:16px; line-height:1.9; margin-top:12px;">The <strong style="color:#c8f0a0;">effect size is 3.3 percentage points</strong>, exceeding our pre-specified MDE of 2pp. Before recommending a full rollout, I'd also verify the guardrail metrics: did the simplified flow increase time-to-first-tweet, support tickets, or app crashes? Assuming those are clean, I recommend shipping the simplified onboarding to 100% of new users.</p>
+      <p style="color:#e2d8cc; font-size:16px; line-height:1.9; margin-top:12px;">As a next step, I'd consider segmenting results by platform (iOS vs Android), geography, and device type to confirm the improvement holds across all user types before full rollout."</p>
+    </div>
+
+    <div class="callout good" style="margin-top:20px;">
+      <div class="callout-tag">✅ What Makes This Answer Exceptional</div>
+      <p>① Stated hypothesis before looking at data ② Computed required sample size upfront ③ Chose the right test (Z-test for proportions) ④ Reported both statistical AND practical significance ⑤ Mentioned guardrail metrics ⑥ Made a clear, actionable business recommendation ⑦ Suggested next steps (segmentation analysis)</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════ PANEL 11 ══ -->
+<div id="panel-cheatsheet" class="panel">
+  <div class="section-label">Quick Reference</div>
+  <div class="section-title">Interview Cheat Sheet</div>
+  <div class="section-desc">Everything you need to recall instantly during an interview — no calculations, just key facts and frameworks.</div>
+
+  <div class="g2">
+    <div class="card">
+      <div class="card-title">Confidence Interval Essentials</div>
+      <table class="tbl">
+        <thead><tr><th>Confidence Level</th><th>Critical Value (z*)</th></tr></thead>
+        <tbody>
+          <tr><td>90%</td><td style="color:var(--amber); font-family:'Fira Code',monospace;">1.645</td></tr>
+          <tr><td><strong>95% (standard)</strong></td><td style="color:var(--green); font-family:'Fira Code',monospace; font-weight:700;">1.960</td></tr>
+          <tr><td>99%</td><td style="color:var(--red); font-family:'Fira Code',monospace;">2.576</td></tr>
+        </tbody>
+      </table>
+      <div class="formula" style="margin-top:14px; font-size:12.5px;">
+        CI = p̂ ± z* × √(p̂(1−p̂)/n)<br>
+        Width ∝ 1/√n
+      </div>
+      <p style="font-size:13.5px; margin-top:10px;">To halve width → need 4× the data<br>To get 3× precision → need 9× the data</p>
+    </div>
+
+    <div class="card">
+      <div class="card-title">A/B Testing Decision Framework</div>
+      <div class="step-list">
+        <div class="step-item" style="padding:10px 0;">
+          <div class="step-circle blue" style="width:28px;height:28px;min-width:28px;font-size:11px;">1</div>
+          <div class="step-content"><strong style="font-size:14px;">State H₀ and H₁</strong><p style="font-size:13px;">Before looking at ANY data</p></div>
+        </div>
+        <div class="step-item" style="padding:10px 0;">
+          <div class="step-circle amber" style="width:28px;height:28px;min-width:28px;font-size:11px;">2</div>
+          <div class="step-content"><strong style="font-size:14px;">Power Analysis</strong><p style="font-size:13px;">Set α, power, MDE → get n</p></div>
+        </div>
+        <div class="step-item" style="padding:10px 0;">
+          <div class="step-circle green" style="width:28px;height:28px;min-width:28px;font-size:11px;">3</div>
+          <div class="step-content"><strong style="font-size:14px;">Run for Full Duration</strong><p style="font-size:13px;">Never peek. Min 2 weeks.</p></div>
+        </div>
+        <div class="step-item" style="padding:10px 0;">
+          <div class="step-circle" style="width:28px;height:28px;min-width:28px;font-size:11px;background:var(--red);">4</div>
+          <div class="step-content"><strong style="font-size:14px;">Z-test + Check Guardrails</strong><p style="font-size:13px;">Primary metric + safety checks</p></div>
+        </div>
+        <div class="step-item" style="padding:10px 0; border-bottom:none;">
+          <div class="step-circle" style="width:28px;height:28px;min-width:28px;font-size:11px;background:var(--purple);">5</div>
+          <div class="step-content"><strong style="font-size:14px;">Business Recommendation</strong><p style="font-size:13px;">Statistical + practical significance</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">The "Never Say This" List — Interview Killers</div>
+    <table class="tbl">
+      <thead><tr><th>❌ What You Might Say</th><th>⚠️ Why It's Wrong</th><th>✅ Say This Instead</th></tr></thead>
+      <tbody>
+        <tr>
+          <td style="color:var(--red);">"The p-value is the probability H₀ is true"</td>
+          <td style="font-size:13px;">H₀ is either true or false — not a probability</td>
+          <td style="color:var(--green); font-size:13px;">"P-value = P(data this extreme | H₀ true)"</td>
+        </tr>
+        <tr>
+          <td style="color:var(--red);">"95% chance the true mean is in this CI"</td>
+          <td style="font-size:13px;">True mean is fixed; the interval is random</td>
+          <td style="color:var(--green); font-size:13px;">"95% of intervals built this way contain the true mean"</td>
+        </tr>
+        <tr>
+          <td style="color:var(--red);">"We got p &lt; 0.05, ship it!"</td>
+          <td style="font-size:13px;">Ignores practical significance and guardrails</td>
+          <td style="color:var(--green); font-size:13px;">"Statistically significant AND exceeds MDE. Guardrails clean. Recommend ship."</td>
+        </tr>
+        <tr>
+          <td style="color:var(--red);">"We ran it 3 days and saw significance"</td>
+          <td style="font-size:13px;">Peeking inflates Type I error; too short for cycles</td>
+          <td style="color:var(--green); font-size:13px;">"We pre-committed to 2 weeks and hit our n target"</td>
+        </tr>
+        <tr>
+          <td style="color:var(--red);">"Fail to reject = we proved no effect"</td>
+          <td style="font-size:13px;">Absence of evidence ≠ evidence of absence</td>
+          <td style="color:var(--green); font-size:13px;">"We didn't find sufficient evidence to reject H₀"</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Pitfall Summary</div>
+    <div class="g2">
+      <div>
+        <p style="font-family:'Fira Code',monospace; font-size:13px; line-height:2.2;">
+          <span style="color:var(--red);">1. Peeking</span> → inflates false positive rate<br>
+          <span style="color:var(--red);">2. Multiple testing</span> → use Bonferroni (α/m)<br>
+          <span style="color:var(--red);">3. Network effects</span> → use geo-based split<br>
+          <span style="color:var(--red);">4. No guardrail metrics</span> → can miss harm<br>
+          <span style="color:var(--red);">5. Simpson's Paradox</span> → always segment results
+        </p>
+      </div>
+      <div>
+        <p style="font-family:'Fira Code',monospace; font-size:13px; line-height:2.2;">
+          <span style="color:var(--red);">6. SRM</span> → chi-sq test group sizes<br>
+          <span style="color:var(--red);">7. Novelty effect</span> → run long enough<br>
+          <span style="color:var(--red);">8. No power analysis</span> → underpowered test<br>
+          <span style="color:var(--red);">9. Wrong metric</span> → pre-specify primary<br>
+          <span style="color:var(--red);">10. Stat ≠ practical significance</span> → report both
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- JAVASCRIPT ══════════════════════════════════════════════ -->
+<script>
+Chart.defaults.color = '#9a8f82';
+Chart.defaults.borderColor = '#d8d0c4';
+Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
+Chart.defaults.font.size = 12;
+
+function normalPDF(x,mu=0,sig=1){return(1/(sig*Math.sqrt(2*Math.PI)))*Math.exp(-0.5*((x-mu)/sig)**2);}
+function range(a,b,s){let r=[];for(let i=a;i<=b+1e-9;i=Math.round((i+s)*10000)/10000)r.push(i);return r;}
+function zCrit(conf){const z={80:1.282,85:1.44,90:1.645,91:1.695,92:1.751,93:1.812,94:1.881,95:1.96,96:2.054,97:2.17,98:2.326,99:2.576};return z[conf]||1.96;}
+
+// ── POINT VS CI ──
+{
+  new Chart(document.getElementById('pointVsCI'),{
+    type:'bar',
+    data:{
+      labels:['Sample 1\n(n=100)','Sample 2\n(n=100)','Sample 3\n(n=100)','True Value\n(unknown)','95% CI\nLower','Estimate\n(x̄)','95% CI\nUpper'],
+      datasets:[{
+        data:[2.1,2.3,1.9,null,1.98,2.1,2.22],
+        backgroundColor:['rgba(26,79,160,0.5)','rgba(26,79,160,0.5)','rgba(26,79,160,0.5)','transparent','rgba(26,122,74,0.5)','rgba(26,79,160,0.8)','rgba(26,122,74,0.5)'],
+        borderColor:['#1a4fa0','#1a4fa0','#1a4fa0','transparent','#1a7a4a','#1a4fa0','#1a7a4a'],
+        borderWidth:2,borderRadius:4
+      }]
+    },
+    options:{plugins:{legend:{display:false}},scales:{y:{min:1.5,max:2.6,title:{display:true,text:'Hours/day'}}}}
+  });
+}
+
+// ── CI SIMULATION ──
+{
+  const trueMean=50, sigma=8, n=40;
+  const labels=[], lows=[], highs=[], colors=[];
+  for(let i=0;i<60;i++){
+    const xbar=trueMean+(Math.random()-0.5)*2.5*(sigma/Math.sqrt(n));
+    const se=sigma/Math.sqrt(n), z=1.96;
+    const lo=xbar-z*se, hi=xbar+z*se;
+    const hit=lo<=trueMean&&trueMean<=hi;
+    labels.push(i+1);
+    lows.push(lo); highs.push(hi);
+    colors.push(hit?'rgba(26,122,74,0.7)':'rgba(192,57,43,0.8)');
+  }
+  new Chart(document.getElementById('ciSimulation'),{
+    type:'bar',
+    data:{
+      labels,
+      datasets:[
+        {label:'CI',data:highs.map((h,i)=>h-lows[i]),base:lows,backgroundColor:colors,borderWidth:0,barPercentage:0.6},
+        {type:'line',label:'True μ=50',data:labels.map(()=>trueMean),borderColor:'rgba(184,92,0,0.8)',borderDash:[4,3],pointRadius:0,borderWidth:2}
+      ]
+    },
+    options:{plugins:{legend:{position:'top'}},scales:{y:{title:{display:true,text:'Value'}},x:{ticks:{maxTicksLimit:15},title:{display:true,text:'Trial #'}}}}
+  });
+}
+
+// ── CI BUILT ──
+{
+  new Chart(document.getElementById('ciBuilt'),{
+    type:'bar',
+    data:{
+      labels:['CI Lower\n(20.3%)','','','Estimate\n(24%)','','','CI Upper\n(27.7%)'],
+      datasets:[{
+        data:[0.203,0.21,0.22,0.24,0.26,0.27,0.277],
+        backgroundColor:['rgba(26,122,74,0.4)','rgba(26,79,160,0.25)','rgba(26,79,160,0.35)','rgba(26,79,160,0.9)','rgba(26,79,160,0.35)','rgba(26,79,160,0.25)','rgba(26,122,74,0.4)'],
+        borderColor:['#1a7a4a','transparent','transparent','#1a4fa0','transparent','transparent','#1a7a4a'],
+        borderWidth:[2,0,0,2,0,0,2],borderRadius:4
+      }]
+    },
+    options:{plugins:{legend:{display:false}},scales:{y:{min:0.15,max:0.32,ticks:{callback:v=>(v*100).toFixed(0)+'%'},title:{display:true,text:'Click Rate'}}}}
+  });
+}
+
+// ── CI INTERACTIVE ──
+let ciInterChart;
+{
+  ciInterChart=new Chart(document.getElementById('ciInteractive'),{
+    type:'bar',
+    data:{labels:['Lower Bound','','Estimate (p̂)','','Upper Bound'],datasets:[{data:[],backgroundColor:[],borderWidth:2,borderRadius:6}]},
+    options:{plugins:{legend:{display:false}},scales:{y:{min:0,max:1,ticks:{callback:v=>(v*100).toFixed(0)+'%'}}}}
+  });
+  updateCI();
+}
+function updateCI(){
+  const n=+document.getElementById('n_slider').value;
+  const conf=+document.getElementById('conf_slider').value;
+  const p=document.getElementById('p_slider').value/100;
+  document.getElementById('n_val').textContent=n;
+  document.getElementById('conf_val').textContent=conf;
+  document.getElementById('p_val').textContent=p.toFixed(2);
+  const z=zCrit(conf);
+  const se=Math.sqrt(p*(1-p)/n);
+  const lo=Math.max(0,p-z*se), hi=Math.min(1,p+z*se);
+  document.getElementById('ci_range').textContent=`[${(lo*100).toFixed(1)}%, ${(hi*100).toFixed(1)}%]`;
+  document.getElementById('ci_interpretation').textContent=`Width: ±${(z*se*100).toFixed(2)}pp | SE: ${(se*100).toFixed(3)}%`;
+  ciInterChart.data.labels=['Lower\n('+( lo*100).toFixed(1)+'%)','','Estimate\n('+(p*100).toFixed(0)+'%)','','Upper\n('+(hi*100).toFixed(1)+'%)'];
+  ciInterChart.data.datasets[0].data=[lo,(lo+p)/2,p,(p+hi)/2,hi];
+  ciInterChart.data.datasets[0].backgroundColor=['rgba(26,122,74,0.5)','rgba(26,79,160,0.3)','rgba(26,79,160,0.9)','rgba(26,79,160,0.3)','rgba(26,122,74,0.5)'];
+  ciInterChart.data.datasets[0].borderColor=['#1a7a4a','transparent','#1a4fa0','transparent','#1a7a4a'];
+  ciInterChart.options.scales.y.min=Math.max(0,lo-0.05);
+  ciInterChart.options.scales.y.max=Math.min(1,hi+0.05);
+  ciInterChart.update();
+}
+
+// ── POWER CALCULATOR ──
+let powerChart;
+{
+  powerChart=new Chart(document.getElementById('powerCurve'),{
+    type:'line',
+    data:{labels:[],datasets:[{label:'Required n per group',data:[],borderColor:'#1a4fa0',fill:false,tension:0.3,pointRadius:0,borderWidth:2.5}]},
+    options:{plugins:{legend:{display:false}},scales:{y:{title:{display:true,text:'Sample Size n'}},x:{title:{display:true,text:'MDE (pp)'}}}}
+  });
+  updatePower();
+}
+function calcN(p0,mde,power){
+  const za=1.96, zb=power>=95?1.645:power>=90?1.282:power>=85?1.036:0.842;
+  const p1=p0+mde, pbar=(p0+p1)/2;
+  return Math.ceil(2*(za+zb)**2*pbar*(1-pbar)/(mde**2));
+}
+function updatePower(){
+  const p0=document.getElementById('p0_slider').value/100;
+  const mde=document.getElementById('mde_slider').value/100;
+  const pow=+document.getElementById('pow_slider').value;
+  document.getElementById('p0_val').textContent=(p0*100).toFixed(0);
+  document.getElementById('mde_val').textContent=(mde*100).toFixed(1);
+  document.getElementById('pow_val').textContent=pow;
+  const n=calcN(p0,mde,pow);
+  document.getElementById('sample_size').textContent=n.toLocaleString();
+  document.getElementById('power_days').textContent=`Total users needed: ${(n*2).toLocaleString()} | At 1,000 users/day per group: ${Math.ceil(n/1000)} days`;
+  const mdes=range(0.005,0.15,0.005);
+  powerChart.data.labels=mdes.map(m=>(m*100).toFixed(1));
+  powerChart.data.datasets[0].data=mdes.map(m=>calcN(p0,m,pow));
+  powerChart.update();
+}
+
+// ── P-VALUE CHART ──
+{
+  const xs=range(-4,4,0.05);
+  const zScore=2.1;
+  new Chart(document.getElementById('pvalueChart'),{
+    type:'bar',
+    data:{
+      labels:xs,
+      datasets:[{
+        data:xs.map(x=>normalPDF(x)),
+        backgroundColor:xs.map(x=>Math.abs(x)>=zScore?'rgba(192,57,43,0.7)':'rgba(26,79,160,0.35)'),
+        borderWidth:0,barPercentage:1.05,categoryPercentage:1.05
+      }]
+    },
+    options:{
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`f(Z)=${c.raw.toFixed(3)}`}}},
+      scales:{x:{ticks:{maxTicksLimit:9},title:{display:true,text:'Z-score'}},y:{title:{display:true,text:'Density'}}}
+    }
+  });
+}
+
+// ── PEEKING CHART ──
+{
+  const days=range(1,28,1);
+  const rng=()=>Math.random();
+  // simulate a p-value path that randomly wanders
+  let pvals=[];
+  let cumEffect=0;
+  for(let d=0;d<28;d++){
+    cumEffect+=(rng()-0.5)*0.3;
+    const z=cumEffect/Math.sqrt(d+1)*2;
+    const p=2*(1-0.5*(1+Math.sign(z)*(1-Math.exp(-0.717*Math.abs(z)-0.416*z*z))));
+    pvals.push(Math.max(0.001,Math.min(0.999,p)));
+  }
+  // force it below 0.05 a couple times early
+  pvals[4]=0.043; pvals[5]=0.038; pvals[9]=0.052; pvals[14]=0.062;
+  for(let i=16;i<28;i++) pvals[i]=0.1+rng()*0.3;
+
+  new Chart(document.getElementById('peekingChart'),{
+    type:'line',
+    data:{
+      labels:days.map(d=>'Day '+d),
+      datasets:[
+        {label:'p-value',data:pvals,borderColor:'#1a4fa0',fill:false,tension:0.3,pointRadius:3,pointBackgroundColor:pvals.map(p=>p<0.05?'#c0392b':'#1a4fa0'),borderWidth:2},
+        {label:'α = 0.05',data:days.map(()=>0.05),borderColor:'rgba(192,57,43,0.6)',borderDash:[5,4],pointRadius:0,borderWidth:2,fill:false}
+      ]
+    },
+    options:{
+      plugins:{legend:{position:'top'}},
+      scales:{y:{min:0,max:0.8,title:{display:true,text:'p-value'}},x:{ticks:{maxTicksLimit:7},title:{display:true,text:'Day of Experiment'}}}
+    }
+  });
+}
+
+// ── SIMPSON'S CHART ──
+{
+  new Chart(document.getElementById('simpsonChart'),{
+    type:'bar',
+    data:{
+      labels:['Control\n(Mobile)','Treatment\n(Mobile)','Control\n(Desktop)','Treatment\n(Desktop)','OVERALL\nControl','OVERALL\nTreatment'],
+      datasets:[{
+        label:'Conversion Rate %',
+        data:[30,28,50,48,35,38],
+        backgroundColor:['rgba(26,79,160,0.6)','rgba(192,57,43,0.6)','rgba(26,79,160,0.6)','rgba(192,57,43,0.6)','rgba(26,79,160,0.85)','rgba(26,122,74,0.85)'],
+        borderColor:['#1a4fa0','#c0392b','#1a4fa0','#c0392b','#1a4fa0','#1a7a4a'],
+        borderWidth:2,borderRadius:5
+      }]
+    },
+    options:{
+      plugins:{legend:{display:false}},
+      scales:{y:{min:0,max:65,ticks:{callback:v=>v+'%'},title:{display:true,text:'Conversion Rate'}},x:{grid:{display:false}}}
+    }
+  });
+}
+
+// ── TWITTER RESULT ──
+{
+  const xs=range(-1,10,0.05);
+  const critZ=1.645, ourZ=8.03;
+  new Chart(document.getElementById('twitterResult'),{
+    type:'bar',
+    data:{
+      labels:xs,
+      datasets:[{
+        data:xs.map(x=>x<=9?normalPDF(x,0,1):0),
+        backgroundColor:xs.map(x=>x>=critZ?'rgba(26,122,74,0.7)':'rgba(26,79,160,0.4)'),
+        borderWidth:0,barPercentage:1.1,categoryPercentage:1.1
+      }]
+    },
+    options:{
+      plugins:{legend:{display:false},annotation:{}},
+      scales:{
+        x:{ticks:{maxTicksLimit:10,callback:(v,i)=>xs[i]<=9?xs[i].toFixed(1):''},title:{display:true,text:'Z-Score (our Z=8.03 is off the chart →)'}},
+        y:{title:{display:true,text:'f(Z)'}}
+      }
+    }
+  });
+}
+
+// ── NAV ──
+function show(id){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.pb-item').forEach(b=>b.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
+  event.currentTarget.classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+</script>
+</body>
+</html>

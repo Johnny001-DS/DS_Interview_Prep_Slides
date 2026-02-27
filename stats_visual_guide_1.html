@@ -1,0 +1,1229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Statistics Visual Guide — DS Interview Prep</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg: #0e0f14;
+    --surface: #161820;
+    --surface2: #1e2030;
+    --border: #2a2d40;
+    --accent: #7c6af7;
+    --accent2: #f76a6a;
+    --accent3: #6af7c0;
+    --accent4: #f7c46a;
+    --text: #e8e9f0;
+    --muted: #8889a0;
+    --highlight: #b0b8ff;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    line-height: 1.7;
+    padding: 0 0 60px;
+  }
+
+  /* HERO */
+  .hero {
+    background: linear-gradient(135deg, #12132a 0%, #1a1035 50%, #0e1a1f 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 48px 40px 36px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(124,106,247,0.12) 0%, transparent 70%);
+    top: -200px; right: -100px;
+    pointer-events: none;
+  }
+  .hero-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .hero h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 42px;
+    line-height: 1.15;
+    color: #fff;
+    max-width: 600px;
+  }
+  .hero h1 em {
+    font-style: italic;
+    color: var(--highlight);
+  }
+  .hero p {
+    margin-top: 14px;
+    color: var(--muted);
+    max-width: 520px;
+    font-weight: 300;
+  }
+
+  /* NAV TABS */
+  .nav {
+    display: flex;
+    gap: 4px;
+    padding: 16px 40px 0;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    overflow-x: auto;
+    flex-wrap: nowrap;
+  }
+  .nav-btn {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    padding: 10px 18px;
+    border: 1px solid transparent;
+    border-bottom: none;
+    border-radius: 6px 6px 0 0;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+    letter-spacing: 0.05em;
+  }
+  .nav-btn:hover { color: var(--text); background: var(--surface2); }
+  .nav-btn.active {
+    background: var(--bg);
+    color: var(--accent);
+    border-color: var(--border);
+  }
+
+  /* CONTENT */
+  .content { display: none; padding: 40px; max-width: 1100px; }
+  .content.active { display: block; }
+
+  /* CARDS */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+    margin-bottom: 24px;
+  }
+  .card-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px;
+    color: #fff;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .card-title .icon {
+    font-size: 20px;
+  }
+  .card-sub {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 18px;
+  }
+
+  /* GRID */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  @media(max-width: 768px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+
+  /* FORMULA BOX */
+  .formula {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 8px;
+    padding: 14px 18px;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    color: var(--highlight);
+    margin: 14px 0;
+  }
+
+  /* STAT PILLS */
+  .stat-row { display: flex; gap: 12px; flex-wrap: wrap; margin: 12px 0; }
+  .stat-pill {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 6px 16px;
+    font-size: 13px;
+    font-family: 'DM Mono', monospace;
+  }
+  .stat-pill span { color: var(--accent3); font-weight: 500; }
+
+  /* CHART CONTAINER */
+  .chart-wrap {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    margin: 16px 0;
+    position: relative;
+  }
+  .chart-wrap canvas { max-height: 250px; }
+  .chart-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    text-align: center;
+    margin-top: 8px;
+  }
+
+  /* INTERVIEW TIP */
+  .tip {
+    background: linear-gradient(135deg, rgba(124,106,247,0.1), rgba(124,106,247,0.05));
+    border: 1px solid rgba(124,106,247,0.3);
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin-top: 16px;
+    font-size: 13.5px;
+  }
+  .tip-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  /* USE CASE TAG */
+  .use-case {
+    display: inline-block;
+    background: rgba(106,247,192,0.1);
+    border: 1px solid rgba(106,247,192,0.25);
+    color: var(--accent3);
+    border-radius: 6px;
+    padding: 3px 12px;
+    font-size: 12px;
+    font-family: 'DM Mono', monospace;
+    margin: 4px 4px 4px 0;
+  }
+
+  /* MINI DISTRIBUTION CARD */
+  .dist-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .dist-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+  }
+  .dist-name {
+    font-family: 'DM Serif Display', serif;
+    font-size: 17px;
+    color: #fff;
+    margin-bottom: 4px;
+  }
+  .dist-type {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 10px;
+  }
+
+  /* ERROR TABLE */
+  .error-table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+  .error-table th, .error-table td {
+    padding: 12px 16px;
+    border: 1px solid var(--border);
+    text-align: left;
+    font-size: 13.5px;
+  }
+  .error-table th {
+    background: var(--surface2);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .error-table tr:hover td { background: rgba(255,255,255,0.02); }
+  .fp { color: var(--accent2); font-weight: 600; }
+  .fn { color: var(--accent4); font-weight: 600; }
+  .ok { color: var(--accent3); font-weight: 600; }
+
+  /* STEPS */
+  .steps { display: flex; flex-direction: column; gap: 0; margin: 16px 0; }
+  .step {
+    display: flex;
+    gap: 16px;
+    padding: 14px 0;
+    position: relative;
+  }
+  .step:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: 17px; top: 42px; bottom: 0;
+    width: 2px;
+    background: var(--border);
+  }
+  .step-num {
+    width: 34px; height: 34px;
+    min-width: 34px;
+    background: var(--accent);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    color: #fff;
+    z-index: 1;
+  }
+  .step-body strong {
+    display: block;
+    color: #fff;
+    margin-bottom: 4px;
+    font-size: 14px;
+  }
+  .step-body p { color: var(--muted); font-size: 13.5px; }
+
+  /* NORMAL RULE */
+  .sigma-bar {
+    background: var(--surface2);
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin: 12px 0;
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .sigma-item { text-align: center; flex: 1; min-width: 80px; }
+  .sigma-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 22px;
+    font-weight: 500;
+  }
+  .sigma-label { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+  /* TOGGLE BUTTON */
+  .toggle-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 18px;
+    border-radius: 20px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin: 4px;
+  }
+  .toggle-btn:hover, .toggle-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  /* SEPARATOR */
+  .sep { height: 1px; background: var(--border); margin: 28px 0; }
+
+  /* BADGE */
+  .badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+    font-weight: 500;
+  }
+  .badge-purple { background: rgba(124,106,247,0.2); color: var(--accent); }
+  .badge-red { background: rgba(247,106,106,0.2); color: var(--accent2); }
+  .badge-green { background: rgba(106,247,192,0.2); color: var(--accent3); }
+
+  p { color: #c8cad8; margin: 8px 0; }
+  strong { color: #e8e9f0; }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--surface); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-tag">📊 Phase 1 · Statistics</div>
+  <h1>Data Science Interview<br><em>Visual Study Guide</em></h1>
+  <p>Core statistics concepts with charts, formulas & interview tips — built from <em>Ace the Data Science Interview</em></p>
+</div>
+
+<div class="nav">
+  <button class="nav-btn active" onclick="show('distributions')">01 · Distributions</button>
+  <button class="nav-btn" onclick="show('clt')">02 · CLT</button>
+  <button class="nav-btn" onclick="show('normal')">03 · Normal Distribution</button>
+  <button class="nav-btn" onclick="show('hypothesis')">04 · Hypothesis Testing</button>
+  <button class="nav-btn" onclick="show('errors')">05 · Type I & II Errors</button>
+  <button class="nav-btn" onclick="show('tests')">06 · Z vs t vs χ²</button>
+</div>
+
+<!-- ==============================
+     TAB 1: DISTRIBUTIONS
+================================ -->
+<div id="tab-distributions" class="content active">
+
+  <div class="card">
+    <div class="card-title"><span class="icon">🎲</span> Probability Distributions — The Big Five</div>
+    <div class="card-sub">Know the formula · the shape · the use case</div>
+    <p>Every distribution answers a specific type of question. Match the question to the distribution — that's 80% of the battle.</p>
+  </div>
+
+  <!-- BINOMIAL -->
+  <div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
+      <div>
+        <div class="dist-name">📌 Binomial Distribution</div>
+        <div class="dist-type">Discrete · Counting successes</div>
+        <p><strong>"How many successes in <em>n</em> independent trials?"</strong></p>
+        <p>Think: coin flips, ad clicks, user signups — anything where each trial is binary (success/fail).</p>
+        <div class="formula">P(X = k) = C(n,k) · p^k · (1−p)^(n−k)</div>
+        <div class="stat-row">
+          <div class="stat-pill">Mean: <span>μ = np</span></div>
+          <div class="stat-pill">Variance: <span>σ² = np(1−p)</span></div>
+        </div>
+        <div style="margin-top:10px;">
+          <span class="use-case">Ad click-through rates</span>
+          <span class="use-case">User signups</span>
+          <span class="use-case">A/B testing outcomes</span>
+        </div>
+      </div>
+      <div style="min-width:240px; flex:1;">
+        <div class="chart-wrap">
+          <canvas id="binomialChart"></canvas>
+          <div class="chart-label">P(X=k) for n=20, p=0.4</div>
+        </div>
+      </div>
+    </div>
+    <div class="tip">
+      <div class="tip-label">🎯 Interview Tip</div>
+      When n is large, the Binomial approximates a Normal distribution (CLT!). An interviewer might ask you to justify this switch — say: <em>"As n → ∞, by CLT, the binomial converges to N(np, np(1−p))."</em>
+    </div>
+  </div>
+
+  <!-- POISSON -->
+  <div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
+      <div>
+        <div class="dist-name">📌 Poisson Distribution</div>
+        <div class="dist-type">Discrete · Events in an interval</div>
+        <p><strong>"How many events in a fixed time/space interval?"</strong></p>
+        <p>Think: support tickets per day, website visits per hour, fraud events per week.</p>
+        <div class="formula">P(X = k) = (e^−λ · λ^k) / k!</div>
+        <div class="stat-row">
+          <div class="stat-pill">Mean: <span>μ = λ</span></div>
+          <div class="stat-pill">Variance: <span>σ² = λ</span></div>
+        </div>
+        <div style="margin:12px 0 6px;">
+          <span style="color: var(--accent2); font-weight:600; font-size:14px;">🔑 Key Insight:</span>
+          <span style="color:#c8cad8;"> Mean = Variance. If you see data where mean ≈ variance, think Poisson immediately.</span>
+        </div>
+        <div>
+          <span class="use-case">Support ticket volume</span>
+          <span class="use-case">Fraud events/week</span>
+          <span class="use-case">Website traffic</span>
+        </div>
+      </div>
+      <div style="min-width:240px; flex:1;">
+        <div class="chart-wrap">
+          <canvas id="poissonChart"></canvas>
+          <div class="chart-label">P(X=k) for λ=5</div>
+        </div>
+      </div>
+    </div>
+    <div class="tip">
+      <div class="tip-label">🎯 Interview Tip</div>
+      Poisson is the discrete event counter. Exponential (below) is its continuous-time twin — Poisson counts events, Exponential measures time <em>between</em> events.
+    </div>
+  </div>
+
+  <!-- EXPONENTIAL -->
+  <div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
+      <div>
+        <div class="dist-name">📌 Exponential Distribution</div>
+        <div class="dist-type">Continuous · Time between events</div>
+        <p><strong>"How long until the next event?"</strong></p>
+        <p>If Poisson counts events, Exponential times the gaps between them.</p>
+        <div class="formula">f(x) = λe^(−λx) for x ≥ 0</div>
+        <div class="stat-row">
+          <div class="stat-pill">Mean: <span>1/λ</span></div>
+          <div class="stat-pill">Variance: <span>1/λ²</span></div>
+        </div>
+        <div style="margin:12px 0 6px;">
+          <span style="color: var(--accent2); font-weight:600; font-size:14px;">🔑 Memorylessness:</span>
+          <span style="color:#c8cad8;"> P(X > s+t | X > s) = P(X > t). If you've waited 5 min, remaining wait is same as if you just arrived.</span>
+        </div>
+        <div>
+          <span class="use-case">Customer wait times</span>
+          <span class="use-case">Time until churn</span>
+          <span class="use-case">Time between transactions</span>
+        </div>
+      </div>
+      <div style="min-width:240px; flex:1;">
+        <div class="chart-wrap">
+          <canvas id="expChart"></canvas>
+          <div class="chart-label">f(x) for λ=1 (blue), λ=0.5 (green)</div>
+        </div>
+      </div>
+    </div>
+    <div class="tip">
+      <div class="tip-label">🎯 Interview Tip</div>
+      Memorylessness is a very common interview topic. Example: <em>"A server has been running for 2 hours with no failure. Given the exponential failure model, what's the expected additional runtime?"</em> Answer: same as the original expected lifetime (1/λ).
+    </div>
+  </div>
+
+  <!-- UNIFORM + NORMAL side by side -->
+  <div class="grid-2">
+    <div class="card">
+      <div class="dist-name">📌 Uniform Distribution</div>
+      <div class="dist-type">Continuous · Equal probability</div>
+      <p>Every value in [a, b] equally likely. Simplest distribution.</p>
+      <div class="formula">f(x) = 1/(b−a)</div>
+      <div class="stat-row">
+        <div class="stat-pill">Mean: <span>(a+b)/2</span></div>
+        <div class="stat-pill">Variance: <span>(b−a)²/12</span></div>
+      </div>
+      <div class="chart-wrap" style="margin-top:14px;">
+        <canvas id="uniformChart" style="max-height:160px;"></canvas>
+        <div class="chart-label">f(x) for Uniform[0,1]</div>
+      </div>
+      <div style="margin-top:10px;">
+        <span class="use-case">Random number gen</span>
+        <span class="use-case">Random sampling</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="dist-name">📌 Normal Distribution</div>
+      <div class="dist-type">Continuous · The bell curve</div>
+      <p>The most important distribution in statistics. Foundation of the CLT.</p>
+      <div class="formula">f(x) = (1/σ√2π) · exp(−(x−μ)²/2σ²)</div>
+      <div class="stat-row">
+        <div class="stat-pill">Mean: <span>μ</span></div>
+        <div class="stat-pill">Variance: <span>σ²</span></div>
+      </div>
+      <div class="chart-wrap" style="margin-top:14px;">
+        <canvas id="normalSmallChart" style="max-height:160px;"></canvas>
+        <div class="chart-label">Standard Normal N(0,1)</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ==============================
+     TAB 2: CLT
+================================ -->
+<div id="tab-clt" class="content">
+  <div class="card">
+    <div class="card-title"><span class="icon">🌊</span> Central Limit Theorem (CLT)</div>
+    <div class="card-sub">The Most Important Theorem in Statistics</div>
+    <p>The CLT is the reason <em>almost all of classical statistics works</em>. It bridges the gap between messy real-world data and the elegant mathematics of the Normal distribution.</p>
+    <div class="formula">If X₁, X₂, ... Xₙ are i.i.d. with mean μ and variance σ²,<br>then: X̄ ~ N(μ, σ²/n) as n → ∞</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">The Intuition</div>
+    <p>Take <strong>any</strong> distribution — even a weird, skewed, lopsided one. Start drawing samples of size <em>n</em>. Calculate the mean of each sample. As n grows, those sample means form a perfect bell curve. Every time.</p>
+    <div class="chart-wrap" style="margin: 20px 0;">
+      <canvas id="cltChart" style="max-height:280px;"></canvas>
+      <div class="chart-label">Sample means approach Normal as n increases (simulated)</div>
+    </div>
+    <div style="display:flex; gap:10px; margin:12px 0; flex-wrap:wrap;">
+      <button class="toggle-btn active" onclick="updateCLT(1, this)">n = 1</button>
+      <button class="toggle-btn" onclick="updateCLT(5, this)">n = 5</button>
+      <button class="toggle-btn" onclick="updateCLT(15, this)">n = 15</button>
+      <button class="toggle-btn" onclick="updateCLT(30, this)">n = 30</button>
+    </div>
+    <p style="color: var(--muted); font-size:13px;">Click the buttons above to see how the distribution of sample means changes with sample size.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Why the CLT Matters for Interviews</div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <strong>Justifies Z-tests and t-tests on any data</strong>
+          <p>Even if your raw data isn't normal (e.g., skewed revenue data), you can still use normal-based tests on the sample mean if n ≥ 30.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <strong>Foundation of all A/B testing</strong>
+          <p>When comparing conversion rates, the CLT is what lets you use a Z-test even though individual outcomes are Bernoulli (0 or 1).</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <strong>Connects Binomial → Normal</strong>
+          <p>For large n, Binomial(n,p) ≈ N(np, np(1−p)). Interviewers ask this often.</p>
+        </div>
+      </div>
+    </div>
+    <div class="tip">
+      <div class="tip-label">🎯 Uber Interview Question (from your book)</div>
+      <em>"Explain the Central Limit Theorem. Why is it useful?"</em><br><br>
+      <strong>Model Answer:</strong> The CLT states that the distribution of sample means approaches a Normal distribution as sample size grows, regardless of the population's original distribution. It's useful because it lets us apply parametric statistical tests (like Z-tests) to real-world data that isn't normally distributed, as long as our sample size is large enough (typically n ≥ 30).
+    </div>
+  </div>
+</div>
+
+<!-- ==============================
+     TAB 3: NORMAL
+================================ -->
+<div id="tab-normal" class="content">
+  <div class="card">
+    <div class="card-title"><span class="icon">🔔</span> The Normal Distribution — Deep Dive</div>
+    <div class="card-sub">The bell curve · Symmetric · Described entirely by μ and σ</div>
+    <p>When someone says a variable is "normally distributed," they mean it follows this shape: symmetric around the mean, with most values clustered near the center and progressively fewer toward the extremes.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">The Empirical Rule (68-95-99.7)</div>
+    <p>This is something you should be able to recite in your sleep — it comes up constantly.</p>
+    <div class="sigma-bar">
+      <div class="sigma-item">
+        <div class="sigma-num" style="color: var(--accent);">68%</div>
+        <div class="sigma-label">within <strong>±1σ</strong></div>
+      </div>
+      <div style="font-size:20px; color: var(--border);">→</div>
+      <div class="sigma-item">
+        <div class="sigma-num" style="color: var(--accent3);">95%</div>
+        <div class="sigma-label">within <strong>±2σ</strong></div>
+      </div>
+      <div style="font-size:20px; color: var(--border);">→</div>
+      <div class="sigma-item">
+        <div class="sigma-num" style="color: var(--accent4);">99.7%</div>
+        <div class="sigma-label">within <strong>±3σ</strong></div>
+      </div>
+    </div>
+    <div class="chart-wrap">
+      <canvas id="normalRuleChart" style="max-height:280px;"></canvas>
+      <div class="chart-label">Normal distribution with σ bands highlighted</div>
+    </div>
+    <div class="tip">
+      <div class="tip-label">🎯 Interview Application</div>
+      If test scores are N(70, 100) — mean 70, std 10 — then 95% of students score between 50 and 90. A score of 95 is 2.5σ above mean: extremely unusual. This logic is core to anomaly detection.
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Standard Normal Z-Score</div>
+    <p>Any Normal distribution can be converted to Standard Normal N(0,1) using:</p>
+    <div class="formula">Z = (X − μ) / σ</div>
+    <p>This tells you: <em>"how many standard deviations is this value from the mean?"</em></p>
+    <div class="grid-2" style="margin-top:16px;">
+      <div style="background: var(--surface2); border:1px solid var(--border); border-radius:8px; padding:16px;">
+        <strong>Example:</strong>
+        <p style="margin-top:8px;">Heights ~ N(170cm, 100). What's the Z-score for someone 185cm tall?</p>
+        <div class="formula" style="margin-top:8px;">Z = (185 − 170) / 10 = 1.5</div>
+        <p>They're 1.5 standard deviations above average. Roughly top 7%.</p>
+      </div>
+      <div style="background: var(--surface2); border:1px solid var(--border); border-radius:8px; padding:16px;">
+        <strong>Why Z-scores matter:</strong>
+        <p style="margin-top:8px;">They standardize values across different scales, making them comparable. Critical for feature scaling in ML, outlier detection, and hypothesis testing.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==============================
+     TAB 4: HYPOTHESIS TESTING
+================================ -->
+<div id="tab-hypothesis" class="content">
+  <div class="card">
+    <div class="card-title"><span class="icon">🔬</span> Hypothesis Testing</div>
+    <div class="card-sub">The Statistical Engine Behind A/B Testing</div>
+    <p>Hypothesis testing is a framework for making decisions from data. Every A/B test you'll run as a data scientist is built on this foundation.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">The 3-Step Framework</div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <strong>State your Hypotheses</strong>
+          <p><strong>H₀ (Null):</strong> Baseline — "no effect," "no difference," "nothing changed"<br>
+          <strong>H₁ (Alternative):</strong> What you're trying to prove</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <strong>Calculate test statistic & p-value</strong>
+          <p>The p-value = probability of observing your result <em>assuming H₀ is true</em>. Smaller p-value = stronger evidence against H₀.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <strong>Compare p-value to α (significance level)</strong>
+          <p>Standard: α = 0.05. If p-value &lt; α → reject H₀. If p-value ≥ α → fail to reject H₀.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">One-Tailed vs Two-Tailed Tests</div>
+    <div class="grid-2">
+      <div>
+        <div style="background: var(--surface2); border:1px solid var(--border); border-radius:8px; padding:16px; margin-bottom:12px;">
+          <strong style="color: var(--accent3);">Two-Tailed Test</strong>
+          <div class="formula" style="margin:8px 0; font-size:12px;">H₀: μ = μ₀  vs  H₁: μ ≠ μ₀</div>
+          <p style="font-size:13px;">Use when you care about <em>any</em> difference (either direction). Most common in A/B tests.<br><br>
+          <em>e.g., "Does the new UI change engagement at all?"</em></p>
+        </div>
+        <div style="background: var(--surface2); border:1px solid var(--border); border-radius:8px; padding:16px;">
+          <strong style="color: var(--accent4);">One-Tailed Test</strong>
+          <div class="formula" style="margin:8px 0; font-size:12px;">H₀: μ = μ₀  vs  H₁: μ &gt; μ₀</div>
+          <p style="font-size:13px;">Use when you only care about one direction.<br><br>
+          <em>e.g., "Does the new feature <strong>increase</strong> conversion?"</em></p>
+        </div>
+      </div>
+      <div>
+        <div class="chart-wrap" style="height:100%; min-height:200px;">
+          <canvas id="tailsChart"></canvas>
+          <div class="chart-label">Rejection regions for two-tailed test (α=0.05, shaded red)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Real Example: Uber Eats Email Campaign</div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <strong>State hypotheses</strong>
+          <p>H₀: email group conversion = control group conversion<br>H₁: email group conversion &gt; control group conversion</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <strong>Run Z-test (large sample, comparing proportions)</strong>
+          <p>Compute Z = (p̂₁ − p̂₂) / SE. Get p-value from normal table.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <strong>Decision</strong>
+          <p>If p-value &lt; 0.05 → ✅ Email campaigns significantly boost conversion. Roll it out!</p>
+        </div>
+      </div>
+    </div>
+    <div class="tip">
+      <div class="tip-label">🎯 P-Value Intuition</div>
+      "The p-value is NOT the probability that H₀ is true. It's the probability of seeing results as extreme as yours, <em>assuming H₀ is true</em>." — Interviewers specifically test this misconception.
+    </div>
+  </div>
+</div>
+
+<!-- ==============================
+     TAB 5: ERRORS
+================================ -->
+<div id="tab-errors" class="content">
+  <div class="card">
+    <div class="card-title"><span class="icon">⚠️</span> Type I & Type II Errors</div>
+    <div class="card-sub">False Positives · False Negatives · The Power Trade-off</div>
+    <p>Interviewers <em>love</em> these — especially asking you to reason about which error is worse in a given scenario.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">The 2×2 Decision Matrix</div>
+    <div class="chart-wrap">
+      <canvas id="confMatrix" style="max-height:280px;"></canvas>
+      <div class="chart-label">Outcome matrix: Reality vs Your Decision</div>
+    </div>
+    <table class="error-table" style="margin-top:20px;">
+      <thead>
+        <tr><th></th><th>H₀ is TRUE (no effect)</th><th>H₀ is FALSE (effect exists)</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Reject H₀</strong></td>
+          <td><span class="fp">❌ Type I Error</span><br><span style="font-size:12px; color:var(--muted);">False Positive · Rate = α</span></td>
+          <td><span class="ok">✅ Correct!</span><br><span style="font-size:12px; color:var(--muted);">Statistical Power = 1−β</span></td>
+        </tr>
+        <tr>
+          <td><strong>Fail to Reject H₀</strong></td>
+          <td><span class="ok">✅ Correct!</span><br><span style="font-size:12px; color:var(--muted);">Confidence = 1−α</span></td>
+          <td><span class="fn">❌ Type II Error</span><br><span style="font-size:12px; color:var(--muted);">False Negative · Rate = β</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div style="color: var(--accent2); font-size:20px; margin-bottom:8px;">🚨 Type I Error (α)</div>
+      <p><strong>False Positive</strong> — You detected an effect that doesn't exist.</p>
+      <div class="formula" style="border-left-color: var(--accent2);">α = P(Reject H₀ | H₀ is true)</div>
+      <p>Standard level: α = 0.05 (5% chance of false positive)</p>
+      <div style="margin-top:12px; background:var(--surface2); border-radius:8px; padding:14px;">
+        <strong>Example:</strong> You roll out a new feature thinking it helped engagement. It didn't — you got fooled by random variation.
+      </div>
+    </div>
+    <div class="card">
+      <div style="color: var(--accent4); font-size:20px; margin-bottom:8px;">⚠️ Type II Error (β)</div>
+      <p><strong>False Negative</strong> — You missed a real effect.</p>
+      <div class="formula" style="border-left-color: var(--accent4);">β = P(Fail to reject H₀ | H₁ is true)</div>
+      <p>Power = 1 − β (want this high, ~0.8+)</p>
+      <div style="margin-top:12px; background:var(--surface2); border-radius:8px; padding:14px;">
+        <strong>Example:</strong> A drug actually works, but your study didn't detect the effect — and you abandoned a cure.
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">The Trade-off — and How to Think About It</div>
+    <p>You <strong>cannot minimize both errors simultaneously</strong>. Making α smaller (fewer false positives) means more false negatives, and vice versa. You choose based on the cost of each error.</p>
+    <div class="chart-wrap">
+      <canvas id="tradeoffChart" style="max-height:220px;"></canvas>
+      <div class="chart-label">As α decreases, β increases (power decreases)</div>
+    </div>
+    <div class="tip">
+      <div class="tip-label">🎯 Classic Interview Scenario</div>
+      <strong>"In a cancer screening test, which error is worse?"</strong><br><br>
+      → Type II (False Negative) — missing real cancer is catastrophic. So we lower the detection threshold, accepting more false positives (unnecessary follow-up tests) to catch more true cases.
+      <br><br>
+      <strong>"In a spam filter, which is worse?"</strong><br>
+      → Type I (False Positive) — flagging real emails as spam causes users to miss important messages. So we're more conservative and accept more spam getting through.
+    </div>
+  </div>
+</div>
+
+<!-- ==============================
+     TAB 6: Z vs t vs Chi
+================================ -->
+<div id="tab-tests" class="content">
+  <div class="card">
+    <div class="card-title"><span class="icon">⚖️</span> Z-test vs t-test vs Chi-Squared</div>
+    <div class="card-sub">Choosing the right test is half the answer</div>
+    <p>Interviewers expect you to instantly know which test fits the situation. Here's the decision logic.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Quick Decision Guide</div>
+    <div style="background: var(--surface2); border:1px solid var(--border); border-radius:10px; padding:20px; margin:16px 0; font-family:'DM Mono', monospace; font-size:13px; line-height:2;">
+      <span style="color: var(--accent4);">What type of data?</span><br>
+      ├─ <span style="color: var(--accent3);">Continuous (means)</span><br>
+      │&nbsp;&nbsp;&nbsp;├─ <span style="color: var(--muted);">n ≥ 30 or σ² known?</span> → <span style="color: var(--accent); font-weight:600;">Z-test</span><br>
+      │&nbsp;&nbsp;&nbsp;└─ <span style="color: var(--muted);">n &lt; 30 and σ² unknown?</span> → <span style="color: var(--accent2); font-weight:600;">t-test</span><br>
+      └─ <span style="color: var(--accent3);">Categorical</span><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─ <span style="color: var(--muted);">Comparing counts/independence?</span> → <span style="color: var(--accent4); font-weight:600;">Chi-squared</span>
+    </div>
+    <p style="color:var(--muted); font-size:13px;">Memory hook: <strong style="color:#fff;">"Z when you Know, t when you Don't, χ² for Categories"</strong></p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Z-test Deep Dive</div>
+    <div class="formula">Z = (X̄ − μ₀) / (σ / √n) ~ N(0,1)</div>
+    <div class="grid-2">
+      <div>
+        <p><strong>Use when:</strong></p>
+        <ul style="color:#c8cad8; padding-left:20px; margin-top:8px; line-height:2;">
+          <li>Sample size n ≥ 30 (CLT kicks in)</li>
+          <li>Population variance σ² is known</li>
+          <li>Comparing proportions (A/B testing)</li>
+        </ul>
+      </div>
+      <div>
+        <div class="chart-wrap">
+          <canvas id="zChart" style="max-height:160px;"></canvas>
+          <div class="chart-label">Z-distribution with α=0.05 critical values</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">t-test Deep Dive</div>
+    <div class="formula">t = (X̄ − μ₀) / (s / √n) ~ t(n−1 df)</div>
+    <div class="grid-2">
+      <div>
+        <p><strong>Use when:</strong></p>
+        <ul style="color:#c8cad8; padding-left:20px; margin-top:8px; line-height:2;">
+          <li>Small sample size (n &lt; 30)</li>
+          <li>Population variance σ² is unknown (use sample variance s²)</li>
+          <li>Degrees of freedom = n − 1</li>
+        </ul>
+        <p style="margin-top:12px;">The t-distribution has <strong>heavier tails</strong> than Normal — it's more conservative with small samples, which is appropriate since there's more uncertainty.</p>
+      </div>
+      <div>
+        <div class="chart-wrap">
+          <canvas id="tChart" style="max-height:160px;"></canvas>
+          <div class="chart-label">t-distribution vs Normal (fatter tails)</div>
+        </div>
+      </div>
+    </div>
+    <div class="tip">
+      <div class="tip-label">🎯 Facebook Interview Question</div>
+      <em>"What is a Z-test and when would you use it versus a t-test?"</em><br><br>
+      Both test means, but the Z-test assumes known variance and uses the Normal distribution, while the t-test estimates variance from the sample and uses the t-distribution — which has heavier tails to account for the additional uncertainty in small samples. As n → ∞, the t-distribution converges to the Normal.
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Chi-Squared Test</div>
+    <div class="formula">χ² = Σ (Observed − Expected)² / Expected</div>
+    <p><strong>Two use cases:</strong></p>
+    <div class="grid-2" style="margin-top:14px;">
+      <div style="background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:16px;">
+        <strong style="color: var(--accent3);">1. Goodness of Fit</strong>
+        <p style="margin-top:8px; font-size:13.5px;">Does observed data match expected distribution?<br><br>
+        <em>e.g., Is a die fair? Roll 600 times, expect 100 of each face. How far is reality from expectation?</em></p>
+      </div>
+      <div style="background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:16px;">
+        <strong style="color: var(--accent4);">2. Test of Independence</strong>
+        <p style="margin-top:8px; font-size:13.5px;">Are two categorical variables related?<br><br>
+        <em>e.g., Is gender independent of product preference? Build a contingency table and run chi-squared.</em></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ========== CHART.JS DEFAULTS ==========
+Chart.defaults.color = '#8889a0';
+Chart.defaults.borderColor = '#2a2d40';
+Chart.defaults.font.family = "'DM Mono', monospace";
+Chart.defaults.font.size = 11;
+
+// ========== HELPERS ==========
+function normalPDF(x, mu=0, sigma=1) {
+  return (1/(sigma*Math.sqrt(2*Math.PI))) * Math.exp(-0.5*((x-mu)/sigma)**2);
+}
+function binomialPMF(n, p, k) {
+  if (k < 0 || k > n) return 0;
+  let logC = 0;
+  for (let i=0; i<k; i++) logC += Math.log(n-i) - Math.log(i+1);
+  return Math.exp(logC + k*Math.log(p) + (n-k)*Math.log(1-p));
+}
+function poissonPMF(lam, k) {
+  let logP = -lam + k*Math.log(lam);
+  for(let i=1; i<=k; i++) logP -= Math.log(i);
+  return Math.exp(logP);
+}
+function range(start, end, step=1) {
+  let arr = [];
+  for (let i=start; i<=end; i+=step) arr.push(Math.round(i*1000)/1000);
+  return arr;
+}
+function tPDF(x, df) {
+  const num = Math.pow(1 + x*x/df, -(df+1)/2);
+  return num * 0.95;
+}
+
+const accent = '#7c6af7', accent2='#f76a6a', accent3='#6af7c0', accent4='#f7c46a';
+
+// ===== BINOMIAL CHART =====
+{
+  const ks = range(0,20,1);
+  const probs = ks.map(k => binomialPMF(20,0.4,k));
+  new Chart(document.getElementById('binomialChart'), {
+    type: 'bar',
+    data: {
+      labels: ks,
+      datasets: [{
+        data: probs,
+        backgroundColor: ks.map(k => k===8 ? accent : 'rgba(124,106,247,0.4)'),
+        borderColor: accent,
+        borderWidth: 1,
+        borderRadius: 3
+      }]
+    },
+    options: { plugins:{legend:{display:false}}, scales:{y:{title:{display:true,text:'P(X=k)'}},x:{title:{display:true,text:'k (successes)'}}} }
+  });
+}
+
+// ===== POISSON CHART =====
+{
+  const ks = range(0,16,1);
+  const probs = ks.map(k => poissonPMF(5, k));
+  new Chart(document.getElementById('poissonChart'), {
+    type: 'bar',
+    data: {
+      labels: ks,
+      datasets: [{
+        data: probs,
+        backgroundColor: ks.map(k => k===5 ? accent3 : 'rgba(106,247,192,0.35)'),
+        borderColor: accent3, borderWidth: 1, borderRadius: 3
+      }]
+    },
+    options: { plugins:{legend:{display:false}}, scales:{y:{title:{display:true,text:'P(X=k)'}},x:{title:{display:true,text:'k (events)'}}} }
+  });
+}
+
+// ===== EXPONENTIAL CHART =====
+{
+  const xs = range(0,6,0.1);
+  new Chart(document.getElementById('expChart'), {
+    type: 'line',
+    data: {
+      labels: xs,
+      datasets: [
+        { label:'λ=1', data: xs.map(x => Math.exp(-x)), borderColor: accent, fill:false, tension:0.4, pointRadius:0, borderWidth:2.5 },
+        { label:'λ=0.5', data: xs.map(x => 0.5*Math.exp(-0.5*x)), borderColor: accent3, fill:false, tension:0.4, pointRadius:0, borderWidth:2.5 }
+      ]
+    },
+    options: { plugins:{legend:{position:'top'}}, scales:{y:{min:0,title:{display:true,text:'f(x)'}},x:{title:{display:true,text:'x'}}} }
+  });
+}
+
+// ===== UNIFORM CHART =====
+{
+  const xs = [-0.2,0,0,1,1,1.2];
+  const ys = [0,0,1,1,0,0];
+  new Chart(document.getElementById('uniformChart'), {
+    type: 'line',
+    data: {
+      labels: xs,
+      datasets: [{ data: ys, borderColor: accent4, backgroundColor:'rgba(247,196,106,0.15)', fill:true, tension:0, pointRadius:0, borderWidth:2.5 }]
+    },
+    options: { plugins:{legend:{display:false}}, scales:{y:{min:0, max:1.5, title:{display:true,text:'f(x)'}},x:{title:{display:true,text:'x'}}} }
+  });
+}
+
+// ===== NORMAL SMALL CHART =====
+{
+  const xs = range(-4,4,0.1);
+  new Chart(document.getElementById('normalSmallChart'), {
+    type: 'line',
+    data: {
+      labels: xs,
+      datasets: [{ data: xs.map(x => normalPDF(x)), borderColor: accent2, backgroundColor:'rgba(247,106,106,0.15)', fill:true, tension:0.4, pointRadius:0, borderWidth:2.5 }]
+    },
+    options: { plugins:{legend:{display:false}}, scales:{y:{title:{display:true,text:'f(x)'}},x:{title:{display:true,text:'x'}}} }
+  });
+}
+
+// ===== CLT SIMULATION =====
+let cltChart;
+function simulateMeans(n, trials=2000) {
+  // Use skewed distribution (exponential) to show CLT at work
+  const means = [];
+  for (let t=0; t<trials; t++) {
+    let sum = 0;
+    for (let i=0; i<n; i++) sum += -Math.log(Math.random());
+    means.push(sum/n);
+  }
+  return means;
+}
+function histogramData(data, bins=40) {
+  const min = Math.min(...data), max = Math.max(...data);
+  const step = (max-min)/bins;
+  const counts = new Array(bins).fill(0);
+  const labels = [];
+  for(let i=0;i<bins;i++) labels.push((min+i*step+step/2).toFixed(2));
+  data.forEach(v => {
+    let b = Math.floor((v-min)/step);
+    if (b>=bins) b=bins-1;
+    counts[b]++;
+  });
+  const total = data.length * step;
+  return { labels, data: counts.map(c => c/total) };
+}
+function updateCLT(n, btn) {
+  document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const means = simulateMeans(n);
+  const hist = histogramData(means);
+  if (cltChart) {
+    cltChart.data.labels = hist.labels;
+    cltChart.data.datasets[0].data = hist.data;
+    cltChart.update();
+  }
+}
+{
+  const means = simulateMeans(1);
+  const hist = histogramData(means);
+  cltChart = new Chart(document.getElementById('cltChart'), {
+    type: 'bar',
+    data: {
+      labels: hist.labels,
+      datasets: [{
+        label: 'Sample Means',
+        data: hist.data,
+        backgroundColor: 'rgba(124,106,247,0.6)',
+        borderColor: accent, borderWidth: 1, borderRadius:2
+      }]
+    },
+    options: {
+      plugins:{legend:{display:false}},
+      scales:{y:{title:{display:true,text:'Density'}},x:{ticks:{maxTicksLimit:8},title:{display:true,text:'Sample Mean'}}}
+    }
+  });
+}
+
+// ===== NORMAL RULE CHART =====
+{
+  const xs = range(-4,4,0.05);
+  const ys = xs.map(x => normalPDF(x));
+  const colors = xs.map(x => {
+    const ax = Math.abs(x);
+    if (ax <= 1) return 'rgba(124,106,247,0.7)';
+    if (ax <= 2) return 'rgba(106,247,192,0.6)';
+    if (ax <= 3) return 'rgba(247,196,106,0.5)';
+    return 'rgba(255,255,255,0.05)';
+  });
+  new Chart(document.getElementById('normalRuleChart'), {
+    type: 'bar',
+    data: {
+      labels: xs,
+      datasets: [{
+        data: ys, backgroundColor: colors, borderWidth:0,
+        barPercentage: 1.05, categoryPercentage: 1.05
+      }]
+    },
+    options: {
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`f(x)=${c.raw.toFixed(3)}`}}},
+      scales:{y:{title:{display:true,text:'f(x)'}},x:{ticks:{maxTicksLimit:9},title:{display:true,text:'σ from mean'}}}
+    }
+  });
+}
+
+// ===== TAILS CHART =====
+{
+  const xs = range(-4,4,0.05);
+  const ys = xs.map(x => normalPDF(x));
+  const colors = xs.map(x => (x <= -1.96 || x >= 1.96) ? 'rgba(247,106,106,0.8)' : 'rgba(124,106,247,0.5)');
+  new Chart(document.getElementById('tailsChart'), {
+    type: 'bar',
+    data: {
+      labels: xs,
+      datasets: [{ data: ys, backgroundColor: colors, borderWidth:0, barPercentage:1.05, categoryPercentage:1.05 }]
+    },
+    options: {
+      plugins:{legend:{display:false}},
+      scales:{y:{title:{display:true,text:'f(x)'}},x:{ticks:{maxTicksLimit:9},title:{display:true,text:'Z'}}}
+    }
+  });
+}
+
+// ===== TRADEOFF CHART =====
+{
+  const alphas = range(0.01,0.2,0.01);
+  const power = alphas.map(a => 1 - (0.2*(1-a/0.01)));
+  const beta = alphas.map(a => 0.85 - a*3.5);
+  new Chart(document.getElementById('tradeoffChart'), {
+    type: 'line',
+    data: {
+      labels: alphas.map(a => a.toFixed(2)),
+      datasets: [
+        { label: 'β (Type II Error)', data: beta.map((b,i)=>Math.max(0.05,0.8-alphas[i]*5+0.01)), borderColor: accent4, tension:0.4, pointRadius:0, borderWidth:2.5, fill:false },
+        { label: 'Power (1−β)', data: beta.map((b,i)=>Math.min(0.95,0.2+alphas[i]*5)), borderColor: accent3, tension:0.4, pointRadius:0, borderWidth:2.5, fill:false }
+      ]
+    },
+    options: {
+      plugins:{legend:{position:'top'}},
+      scales:{
+        y:{min:0,max:1,title:{display:true,text:'Rate'}},
+        x:{title:{display:true,text:'α (Type I Error Rate)'}}
+      }
+    }
+  });
+}
+
+// ===== Z CHART =====
+{
+  const xs = range(-4,4,0.05);
+  const ys = xs.map(x => normalPDF(x));
+  const colors = xs.map(x => (x <= -1.96 || x >= 1.96) ? 'rgba(247,106,106,0.8)' : 'rgba(124,106,247,0.5)');
+  new Chart(document.getElementById('zChart'), {
+    type: 'bar',
+    data: {
+      labels: xs,
+      datasets: [{ data: ys, backgroundColor: colors, borderWidth:0, barPercentage:1.05, categoryPercentage:1.05 }]
+    },
+    options: {
+      plugins:{legend:{display:false}},
+      scales:{y:{title:{display:true,text:'f(x)'}},x:{ticks:{maxTicksLimit:9}}}
+    }
+  });
+}
+
+// ===== T CHART =====
+{
+  const xs = range(-4,4,0.1);
+  new Chart(document.getElementById('tChart'), {
+    type: 'line',
+    data: {
+      labels: xs,
+      datasets: [
+        { label:'Normal', data: xs.map(x => normalPDF(x)), borderColor: accent, fill:false, tension:0.4, pointRadius:0, borderWidth:2.5 },
+        { label:'t (df=5)', data: xs.map(x => tPDF(x, 5)), borderColor: accent2, fill:false, tension:0.4, pointRadius:0, borderWidth:2.5, borderDash:[5,3] }
+      ]
+    },
+    options: {
+      plugins:{legend:{position:'top'}},
+      scales:{y:{title:{display:true,text:'f(x)'}},x:{ticks:{maxTicksLimit:9}}}
+    }
+  });
+}
+
+// ===== CONFUSION MATRIX =====
+{
+  new Chart(document.getElementById('confMatrix'), {
+    type: 'bar',
+    data: {
+      labels: ['True Positive\n(Correct Rejection)', 'Type I Error\n(False Positive)', 'Type II Error\n(False Negative)', 'True Negative\n(Correct Acceptance)'],
+      datasets: [{
+        data: [0.8, 0.2, 0.15, 0.85],
+        backgroundColor: [
+          'rgba(106,247,192,0.7)',
+          'rgba(247,106,106,0.7)',
+          'rgba(247,196,106,0.7)',
+          'rgba(106,247,192,0.5)'
+        ],
+        borderColor: [accent3, accent2, accent4, accent3],
+        borderWidth: 2, borderRadius: 6
+      }]
+    },
+    options: {
+      plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>`Rate: ${(c.raw*100).toFixed(0)}%`}}},
+      scales:{y:{min:0,max:1,title:{display:true,text:'Rate'},ticks:{callback:v=>`${(v*100).toFixed(0)}%`}}}
+    }
+  });
+}
+
+// ===== NAV =====
+function show(tab) {
+  document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  event.target.classList.add('active');
+}
+</script>
+</body>
+</html>
