@@ -1,0 +1,1357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Machine Learning Part 2 — Advanced Algorithms & Neural Networks</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+:root{
+  --bg:#f5f0e8;--s1:#fff;--s2:#ede8df;--s3:#e2dbd0;
+  --border:#ccc4b4;--border2:#b8ae9e;
+  --ink:#1a1610;--ink2:#3d3628;--ink3:#6b5f50;--muted:#9a8f80;
+  --teal:#0d6e6e;--teal-s:rgba(13,110,110,0.1);
+  --orange:#c45c00;--orange-s:rgba(196,92,0,0.1);
+  --navy:#1a2d5a;--navy-s:rgba(26,45,90,0.1);
+  --rose:#9e1f3a;--rose-s:rgba(158,31,58,0.1);
+  --forest:#1a5c35;--forest-s:rgba(26,92,53,0.1);
+  --violet:#5c1a9e;--violet-s:rgba(92,26,158,0.1);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--ink);font-family:'Space Grotesk',sans-serif;font-size:15.5px;line-height:1.8;}
+
+/* HERO */
+.hero{
+  background:var(--ink);color:#f5f0e8;
+  padding:60px 52px 52px;
+  position:relative;overflow:hidden;
+}
+.hero::after{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 50% 80% at 90% 50%,rgba(13,110,110,0.15) 0%,transparent 60%),
+             radial-gradient(ellipse 40% 60% at 10% 80%,rgba(196,92,0,0.1) 0%,transparent 60%);
+  pointer-events:none;
+}
+.h-tag{font-family:'IBM Plex Mono',monospace;font-size:11px;color:#9a8f80;letter-spacing:.2em;text-transform:uppercase;margin-bottom:16px;}
+.hero h1{font-family:'Instrument Serif',serif;font-size:52px;font-weight:400;line-height:1.1;max-width:700px;}
+.hero h1 em{font-style:italic;color:#b8c4d4;}
+.hero-desc{color:#8a8070;max-width:560px;font-size:16px;margin-top:14px;font-weight:300;}
+.hero-chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:24px;}
+.chip{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:20px;padding:5px 14px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#b0a898;}
+
+/* NAV */
+.nav{background:var(--s1);border-bottom:2px solid var(--border);display:flex;overflow-x:auto;padding:0 52px;}
+.nb{font-family:'IBM Plex Mono',monospace;font-size:11.5px;padding:14px 18px;background:transparent;color:var(--muted);border:none;border-bottom:3px solid transparent;cursor:pointer;white-space:nowrap;transition:all .2s;margin-bottom:-2px;}
+.nb:hover{color:var(--ink2);}
+.nb.active{color:var(--teal);border-bottom-color:var(--teal);}
+
+/* PANELS */
+.panel{display:none;padding:52px;max-width:1160px;}
+.panel.active{display:block;}
+
+/* SECTION */
+.sh-tag{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:.18em;text-transform:uppercase;margin-bottom:10px;}
+.sh-title{font-family:'Instrument Serif',serif;font-size:38px;font-weight:400;line-height:1.15;margin-bottom:8px;}
+.sh-title em{font-style:italic;color:var(--teal);}
+.sh-desc{color:var(--ink3);font-size:16px;max-width:680px;margin-bottom:40px;font-weight:300;}
+
+/* CARDS */
+.card{background:var(--s1);border:1px solid var(--border);border-radius:16px;padding:36px 38px;margin-bottom:24px;}
+.card.teal{border-left:4px solid var(--teal);}
+.card.orange{border-left:4px solid var(--orange);}
+.card.navy{border-left:4px solid var(--navy);}
+.card.rose{border-left:4px solid var(--rose);}
+.card.forest{border-left:4px solid var(--forest);}
+.card.violet{border-left:4px solid var(--violet);}
+.card-title{font-family:'Instrument Serif',serif;font-size:24px;color:var(--ink);margin-bottom:14px;}
+
+/* ANALOGY */
+.analogy{background:#fffaf0;border:1px solid #e8d8a0;border-left:5px solid var(--orange);border-radius:10px;padding:20px 24px;margin:18px 0;}
+.a-tag{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--orange);text-transform:uppercase;letter-spacing:.15em;margin-bottom:8px;}
+.analogy p{color:var(--ink2);font-size:15px;}
+
+/* FORMULA */
+.formula{background:var(--ink);color:#c8e8c8;border-radius:10px;padding:18px 22px;font-family:'IBM Plex Mono',monospace;font-size:13.5px;line-height:2;margin:16px 0;}
+.formula .cm{color:#5a6e5a;font-size:12px;}
+.formula .hl{color:#ffd97e;}
+.formula.navy{background:#0a1020;color:#b8c8ff;}.formula.navy .cm{color:#3a4a70;}.formula.navy .hl{color:#ffd97e;}
+.formula.teal{background:#051515;color:#80d8d8;}.formula.teal .cm{color:#1a4040;}.formula.teal .hl{color:#ffd97e;}
+.formula.rose{background:#1a0508;color:#ffb8c8;}.formula.rose .cm{color:#5a2030;}.formula.rose .hl{color:#ffd97e;}
+
+/* GRIDS */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+@media(max-width:820px){.g2,.g3,.g4{grid-template-columns:1fr;}}
+
+/* TILES */
+.tile{background:var(--s2);border:1px solid var(--border);border-radius:12px;padding:22px 20px;}
+.tile-label{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin-bottom:8px;}
+.tile-value{font-family:'Instrument Serif',serif;font-size:30px;line-height:1;margin-bottom:8px;}
+
+/* STEPS */
+.steps{margin:18px 0;}
+.step{display:flex;gap:18px;padding:16px 0;border-bottom:1px solid var(--border);}
+.step:last-child{border-bottom:none;}
+.sn{width:38px;height:38px;min-width:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:13px;}
+.sn.t{background:var(--teal-s);color:var(--teal);border:1px solid rgba(13,110,110,.3);}
+.sn.o{background:var(--orange-s);color:var(--orange);border:1px solid rgba(196,92,0,.3);}
+.sn.n{background:var(--navy-s);color:var(--navy);border:1px solid rgba(26,45,90,.3);}
+.sn.r{background:var(--rose-s);color:var(--rose);border:1px solid rgba(158,31,58,.3);}
+.sn.f{background:var(--forest-s);color:var(--forest);border:1px solid rgba(26,92,53,.3);}
+.sn.v{background:var(--violet-s);color:var(--violet);border:1px solid rgba(92,26,158,.3);}
+.sb strong{display:block;color:var(--ink);margin-bottom:4px;font-size:15.5px;}
+.sb p,.sb li{color:var(--ink3);font-size:14.5px;}
+.sb ul{padding-left:18px;margin-top:6px;}
+.detail{background:var(--s2);border:1px solid var(--border);border-left:3px solid var(--border2);border-radius:8px;padding:12px 16px;margin-top:10px;font-size:14px;color:var(--ink2);}
+
+/* CALLOUTS */
+.callout{border-radius:10px;padding:18px 22px;margin:18px 0;}
+.ct{font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.15em;margin-bottom:8px;}
+.callout p{font-size:14.5px;color:var(--ink2);}
+.callout.warn{background:var(--rose-s);border:1px solid rgba(158,31,58,.2);}.callout.warn .ct{color:var(--rose);}
+.callout.good{background:var(--forest-s);border:1px solid rgba(26,92,53,.2);}.callout.good .ct{color:var(--forest);}
+.callout.info{background:var(--navy-s);border:1px solid rgba(26,45,90,.2);}.callout.info .ct{color:var(--navy);}
+.callout.tip{background:var(--orange-s);border:1px solid rgba(196,92,0,.2);}.callout.tip .ct{color:var(--orange);}
+.callout.teal{background:var(--teal-s);border:1px solid rgba(13,110,110,.2);}.callout.teal .ct{color:var(--teal);}
+
+/* CHART */
+.cw{background:var(--s2);border:1px solid var(--border);border-radius:12px;padding:24px;margin:18px 0;}
+.cw canvas{max-height:280px;}
+.clabel{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);text-align:center;margin-top:12px;line-height:1.5;}
+
+/* TABLE */
+.tbl{width:100%;border-collapse:collapse;margin:16px 0;}
+.tbl th{background:var(--ink);color:#f5f0e8;padding:12px 16px;text-align:left;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.06em;}
+.tbl td{padding:13px 16px;border:1px solid var(--border);font-size:14px;color:var(--ink2);vertical-align:top;}
+.tbl tr:hover td{background:var(--s2);}
+
+/* QUOTE */
+.quote{border-left:4px solid var(--violet);padding:16px 22px;background:var(--violet-s);border-radius:0 10px 10px 0;margin:18px 0;}
+.quote p{font-family:'Instrument Serif',serif;font-size:19px;font-style:italic;color:var(--ink);line-height:1.5;}
+.quote span{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);display:block;margin-top:8px;}
+
+/* TAGS */
+.tag{display:inline-block;padding:3px 11px;border-radius:20px;font-family:'IBM Plex Mono',monospace;font-size:11px;margin:2px;}
+.tag-teal{background:var(--teal-s);color:var(--teal);border:1px solid rgba(13,110,110,.25);}
+.tag-orange{background:var(--orange-s);color:var(--orange);border:1px solid rgba(196,92,0,.25);}
+.tag-navy{background:var(--navy-s);color:var(--navy);border:1px solid rgba(26,45,90,.25);}
+.tag-rose{background:var(--rose-s);color:var(--rose);border:1px solid rgba(158,31,58,.25);}
+.tag-forest{background:var(--forest-s);color:var(--forest);border:1px solid rgba(26,92,53,.25);}
+.tag-violet{background:var(--violet-s);color:var(--violet);border:1px solid rgba(92,26,158,.25);}
+
+/* VERSUS */
+.versus{display:grid;grid-template-columns:1fr 50px 1fr;gap:14px;align-items:center;margin:18px 0;}
+.vs-mid{text-align:center;font-family:'Instrument Serif',serif;font-size:24px;color:var(--muted);}
+.vb{border-radius:12px;padding:20px;}
+.vb.w{background:var(--rose-s);border:1px solid rgba(158,31,58,.2);}
+.vb.r{background:var(--forest-s);border:1px solid rgba(26,92,53,.2);}
+.vt{font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;}
+.vb.w .vt{color:var(--rose);}
+.vb.r .vt{color:var(--forest);}
+.vb p{font-size:14px;color:var(--ink2);}
+
+/* NN DIAGRAM */
+.nn-diagram{display:flex;align-items:center;justify-content:center;gap:20px;padding:24px;background:var(--s2);border:1px solid var(--border);border-radius:12px;margin:18px 0;flex-wrap:wrap;}
+.nn-layer{display:flex;flex-direction:column;align-items:center;gap:10px;}
+.nn-label{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);text-align:center;margin-top:6px;}
+.nn-node{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:10px;border:2px solid;}
+.nn-arrow{font-size:22px;color:var(--border2);}
+.n-inp{background:var(--navy-s);border-color:var(--navy);color:var(--navy);}
+.n-hid{background:var(--teal-s);border-color:var(--teal);color:var(--teal);}
+.n-out{background:var(--orange-s);border-color:var(--orange);color:var(--orange);}
+
+/* SEP */
+.sep{height:1px;background:var(--border);margin:28px 0;}
+
+p{color:var(--ink2);margin:8px 0;}
+strong{color:var(--ink);}
+em{color:var(--teal);font-style:italic;}
+ul,ol{padding-left:22px;color:var(--ink2);}
+li{margin:6px 0;}
+::-webkit-scrollbar{width:5px;height:5px;}::-webkit-scrollbar-track{background:var(--s2);}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="h-tag">🤖 Phase 2 · Machine Learning · Part 2 of 2</div>
+  <h1>Advanced Algorithms<br>&amp; <em>Neural Networks</em></h1>
+  <p class="hero-desc">SVMs, Naive Bayes, K-Means Clustering, PCA, Neural Networks explained from scratch — with real company examples, analogies, and interview-ready answers.</p>
+  <div class="hero-chips">
+    <span class="chip">⚔️ SVMs</span>
+    <span class="chip">📊 Naive Bayes</span>
+    <span class="chip">🎯 K-Means</span>
+    <span class="chip">📉 PCA</span>
+    <span class="chip">🧠 Neural Nets</span>
+    <span class="chip">⛰️ Gradient Descent</span>
+    <span class="chip">🏗️ ML System Design</span>
+  </div>
+</div>
+
+<!-- NAV -->
+<div class="nav">
+  <button class="nb active" onclick="show('svm')">01 · SVMs</button>
+  <button class="nb" onclick="show('nb')">02 · Naive Bayes</button>
+  <button class="nb" onclick="show('kmeans')">03 · K-Means</button>
+  <button class="nb" onclick="show('pca')">04 · PCA</button>
+  <button class="nb" onclick="show('nn')">05 · Neural Networks</button>
+  <button class="nb" onclick="show('activation')">06 · Activation Functions</button>
+  <button class="nb" onclick="show('backprop')">07 · Backprop & Training</button>
+  <button class="nb" onclick="show('gd')">08 · Gradient Descent</button>
+  <button class="nb" onclick="show('design')">09 · ML System Design</button>
+  <button class="nb" onclick="show('cheat')">10 · Master Cheat Sheet</button>
+</div>
+
+
+<!-- ══════════ PANEL 01: SVM ══════════ -->
+<div id="panel-svm" class="panel active">
+  <div class="sh-tag">Supervised Learning · Classification</div>
+  <div class="sh-title">Support Vector <em>Machines</em></div>
+  <div class="sh-desc">One of the most mathematically elegant classifiers. Especially powerful in high-dimensional spaces and when classes are clearly separable.</div>
+
+  <div class="card teal">
+    <div class="card-title">The Core Idea — Finding the Best Boundary</div>
+    <p>When you have two classes of data points, there are infinitely many lines (or hyperplanes) you could draw to separate them. SVM doesn't just find <em>any</em> boundary — it finds the <strong>one that maximizes the gap between the two classes</strong>. This gap is called the <strong>margin</strong>.</p>
+
+    <div class="analogy">
+      <div class="a-tag">🛣️ Analogy — The Widest Road Between Two Cities</div>
+      <p>Imagine two rival cities, Red and Blue, and you need to build a road between them that stays as far from both cities as possible. A road squeezed close to Red City is risky — a small detour and you're in Red territory. A road that runs exactly down the middle maximizes safety on both sides.</p>
+      <p style="margin-top:8px;">SVM finds that "maximum safety road" — the decision boundary that's as far as possible from both classes. This makes it maximally confident and robust to slight data variations.</p>
+    </div>
+
+    <div class="cw">
+      <canvas id="svmChart" style="max-height:280px;"></canvas>
+      <div class="clabel">SVM finds the hyperplane that maximizes the margin (distance to nearest points on each side).<br>The margin boundary points are called Support Vectors — they define the entire solution.</div>
+    </div>
+
+    <div class="formula teal">
+      <span class="cm">// SVM maximizes the margin between classes</span><br>
+      Margin = <span class="hl">2 / ‖w‖</span>    (where w = weight vector defining the hyperplane)<br><br>
+      <span class="cm">// Decision boundary: w·x + b = 0</span><br>
+      <span class="cm">// Support vectors lie on: w·x + b = ±1</span><br><br>
+      Predict class +1 if w·x + b ≥ 0<br>
+      Predict class -1 if w·x + b &lt; 0
+    </div>
+
+    <div class="callout info">
+      <div class="ct">💡 Why "Support Vectors"?</div>
+      <p>Only the training points closest to the decision boundary — called support vectors — actually determine where the boundary goes. Remove any other point and the boundary stays identical. This is remarkable: the model is entirely defined by a small handful of data points.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">The Kernel Trick — Handling Non-Linear Data</div>
+    <p>What if the data isn't linearly separable? You can't draw a straight line between the classes. This is where the <strong>kernel trick</strong> — one of the most clever ideas in all of ML — comes in.</p>
+
+    <div class="analogy">
+      <div class="a-tag">🔴 Analogy — Sorting Marbles on a Table</div>
+      <p>Imagine red and blue marbles mixed on a table — all interleaved, impossible to separate with a straight line. But what if you <strong>flick the table upward</strong>? The marbles fly into the air in 3D space. Now, a flat sheet of paper held horizontally CAN separate them — because in 3D, they land at different heights based on their weight.</p>
+      <p style="margin-top:8px;">The kernel trick does this mathematically — it implicitly maps data into a higher-dimensional space where a linear boundary CAN separate the classes. The genius? You never actually compute the high-dimensional coordinates. The kernel function computes the similarity between points as if they were in that space, without the computational cost.</p>
+    </div>
+
+    <div class="g2" style="margin-top:18px;">
+      <div>
+        <div class="formula teal" style="margin:0;font-size:12.5px;">
+          <span class="cm">// The Kernel Trick</span><br>
+          K(x, y) = φ(x)ᵀ φ(y)<br><br>
+          <span class="cm">// Instead of computing φ(x) explicitly,</span><br>
+          <span class="cm">// compute K(x,y) directly in original space</span><br>
+          <span class="cm">// — same result, fraction of the compute cost!</span>
+        </div>
+        <p style="margin-top:14px;font-size:14px;"><strong>Common kernels to know:</strong></p>
+        <ul style="margin-top:6px;font-size:14px;">
+          <li><strong>Linear kernel:</strong> K(x,y) = xᵀy. Use for linearly separable data.</li>
+          <li><strong>RBF/Gaussian:</strong> K(x,y) = exp(−γ‖x−y‖²). Most popular for nonlinear problems.</li>
+          <li><strong>Polynomial:</strong> K(x,y) = (xᵀy + c)ᵈ. For polynomial boundaries.</li>
+        </ul>
+        <div class="callout tip" style="margin-top:14px;">
+          <div class="ct">🎯 Quick Decision Rule</div>
+          <p>Linear data → linear kernel. Non-linear data → RBF kernel (default). When unsure: start with RBF and tune γ.</p>
+        </div>
+      </div>
+      <div>
+        <div class="cw" style="margin:0;height:100%;">
+          <canvas id="kernelChart" style="max-height:250px;"></canvas>
+          <div class="clabel">Left: non-linearly separable in 2D.<br>Right: linearly separable after kernel transformation to higher dimension.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">When to Use SVMs — and When Not To</div>
+    <table class="tbl">
+      <thead><tr><th>Scenario</th><th>SVM Good?</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr><td>High-dimensional data (many features, few samples)</td><td style="color:var(--forest);">✅ Excellent</td><td style="font-size:13.5px;">SVMs shine here — text classification, genomics</td></tr>
+        <tr><td>Clear margin between classes</td><td style="color:var(--forest);">✅ Excellent</td><td style="font-size:13.5px;">Maximum margin classifier is ideal</td></tr>
+        <tr><td>Non-linear boundaries</td><td style="color:var(--forest);">✅ Good (with RBF kernel)</td><td style="font-size:13.5px;">Kernel trick handles it elegantly</td></tr>
+        <tr><td>Very large datasets (millions of rows)</td><td style="color:var(--rose);">❌ Poor</td><td style="font-size:13.5px;">O(n²) to O(n³) complexity — too slow</td></tr>
+        <tr><td>Overlapping classes, noisy data</td><td style="color:var(--rose);">❌ Poor</td><td style="font-size:13.5px;">No clean margin possible; other models handle noise better</td></tr>
+        <tr><td>Need probability outputs</td><td style="color:var(--orange);">⚠️ Possible but awkward</td><td style="font-size:13.5px;">SVMs output class labels; probabilities require extra calibration</td></tr>
+        <tr><td>Need interpretability</td><td style="color:var(--rose);">❌ Poor</td><td style="font-size:13.5px;">Hard to explain what the decision boundary means to non-technical stakeholders</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+<!-- ══════════ PANEL 02: NAIVE BAYES ══════════ -->
+<div id="panel-nb" class="panel">
+  <div class="sh-tag">Supervised Learning · Probabilistic Classifier</div>
+  <div class="sh-title">Naive <em>Bayes</em></div>
+  <div class="sh-desc">The "naive" classifier that's surprisingly powerful. Despite a strong (and often wrong) assumption, it outperforms complex models on many real-world tasks.</div>
+
+  <div class="card orange">
+    <div class="card-title">The Big Idea — Using Bayes' Theorem to Classify</div>
+    <p>Naive Bayes is a probabilistic classifier. Instead of finding a boundary like SVM or learning weights like logistic regression, it directly models the <em>probability that an example belongs to each class</em>, then picks the most probable class.</p>
+    <p>It applies <strong>Bayes' Theorem</strong> — which you saw in the statistics section — to compute these class probabilities from the training data.</p>
+
+    <div class="analogy">
+      <div class="a-tag">📧 Analogy — The Spam Filter That Counts Words</div>
+      <p>Imagine you're building a spam filter from scratch. You have 1,000 labeled emails. You notice: the word "FREE" appears in 80% of spam emails but only 5% of real emails. The word "meeting" appears in 60% of real emails but only 2% of spam. When you get a new email, you check each word and multiply the probabilities together to decide: is this more likely spam or not spam?</p>
+      <p style="margin-top:8px;">That's exactly Naive Bayes. Count word frequencies in each class, then use those counts to classify new examples.</p>
+    </div>
+
+    <div class="formula">
+      <span class="cm">// Bayes' Theorem applied to classification</span><br>
+      P(class | features) ∝ P(class) × P(features | class)<br><br>
+      <span class="cm">// "Naive" assumption: features are independent given the class</span><br>
+      P(x₁, x₂, ..., xₙ | class) = P(x₁|class) × P(x₂|class) × ... × P(xₙ|class)<br><br>
+      <span class="cm">// Final classification rule</span><br>
+      ŷ = <span class="hl">argmax</span> P(Y=yₖ) × Π P(xᵢ | Y=yₖ)
+    </div>
+
+    <div class="callout warn">
+      <div class="ct">⚠️ The "Naive" Part — The Assumption That's Usually Wrong</div>
+      <p>Naive Bayes assumes all features are <strong>independent of each other given the class</strong>. For spam emails, this means: knowing "FREE" is in the email tells you nothing more about whether "MONEY" is also there. In reality, they're correlated — spam emails tend to use many such words together.</p>
+      <p style="margin-top:8px;">Despite this wrong assumption, Naive Bayes works remarkably well in practice — especially for text classification — because the final classifications are often correct even when the probability estimates are off.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">A Worked Example — Email Spam Detection</div>
+    <div class="steps">
+      <div class="step">
+        <div class="sn o">1</div>
+        <div class="sb">
+          <strong>Training Phase — Count Word Frequencies</strong>
+          <p>From your labeled training emails, you build a frequency table:</p>
+          <div class="detail" style="font-family:'IBM Plex Mono',monospace;font-size:13px;line-height:2;">
+            Word "FREE":  P(FREE|spam)=0.80, P(FREE|real)=0.05<br>
+            Word "click":  P(click|spam)=0.70, P(click|real)=0.10<br>
+            Word "meeting": P(meeting|spam)=0.02, P(meeting|real)=0.60<br>
+            Prior: P(spam)=0.30, P(real)=0.70
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="sn t">2</div>
+        <div class="sb">
+          <strong>New Email Arrives: "FREE click meeting"</strong>
+          <p>Calculate the score for each class (using log-probabilities to avoid tiny numbers):</p>
+          <div class="detail" style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;line-height:2;">
+            Score(spam) = log(0.30) + log(0.80) + log(0.70) + log(0.02)<br>
+                        = -1.20 + (-0.22) + (-0.36) + (-3.91) = -5.69<br><br>
+            Score(real) = log(0.70) + log(0.05) + log(0.10) + log(0.60)<br>
+                        = -0.36 + (-3.00) + (-2.30) + (-0.51) = -6.17
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="sn f">3</div>
+        <div class="sb">
+          <strong>Classification — Pick the Highest Score</strong>
+          <p>Score(spam) = -5.69 > Score(real) = -6.17</p>
+          <div class="detail" style="border-left-color:var(--forest);">→ Classify as <strong>SPAM</strong>. Even with "meeting" (more common in real emails), the presence of "FREE" and "click" pushes the spam probability higher.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">When Naive Bayes Shines vs When It Struggles</div>
+    <div class="g2">
+      <div>
+        <p style="color:var(--forest);font-weight:600;margin-bottom:8px;">✅ Use Naive Bayes When:</p>
+        <ul>
+          <li><strong>Text classification</strong> — spam detection, sentiment analysis, news categorization (features = word counts, roughly independent)</li>
+          <li><strong>Very small datasets</strong> — needs far less data than other models to work. With k features, you only need k data points (not 2ᵏ)</li>
+          <li><strong>Fast training and prediction</strong> — extremely computationally cheap</li>
+          <li><strong>Real-time applications</strong> — great for streaming data or latency-sensitive systems</li>
+          <li><strong>Strong class separability</strong> — even when independence assumption breaks down, often still classifies correctly</li>
+        </ul>
+      </div>
+      <div>
+        <p style="color:var(--rose);font-weight:600;margin-bottom:8px;">❌ Avoid Naive Bayes When:</p>
+        <ul>
+          <li><strong>Features are highly correlated</strong> — double-counting correlated evidence inflates confidence incorrectly</li>
+          <li><strong>Precise probabilities matter</strong> — the probability outputs are often poorly calibrated (not reliable)</li>
+          <li><strong>Complex feature interactions are important</strong> — the independence assumption prevents learning "A and B together predicts X" patterns</li>
+          <li><strong>Zero frequency problem</strong> — if a word never appears in training data for a class, P=0 and the whole product collapses to 0. Fix: Laplace smoothing (add 1 to all counts)</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="callout tip" style="margin-top:16px;">
+      <div class="ct">🎯 Citadel Interview — Naive Bayes vs Logistic Regression</div>
+      <p><strong>"Compare and contrast Gaussian Naive Bayes and logistic regression."</strong></p>
+      <p style="margin-top:10px;">Key answer: "Both produce linear decision boundaries. NB is a generative model — it models P(X|Y) and P(Y) to infer P(Y|X). Logistic regression is discriminative — it directly models P(Y|X). NB needs very little data but makes strong independence assumptions that are usually violated. Logistic regression is more flexible but needs more training data and an optimization step. In practice: use NB when data is scarce or features are roughly independent (like words); use logistic regression when features are correlated and you have enough data."</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════ PANEL 03: K-MEANS ══════════ -->
+<div id="panel-kmeans" class="panel">
+  <div class="sh-tag">Unsupervised Learning · Clustering</div>
+  <div class="sh-title">K-Means <em>Clustering</em></div>
+  <div class="sh-desc">The most popular unsupervised learning algorithm. Groups data into clusters without any labels — the algorithm discovers natural groupings on its own.</div>
+
+  <div class="card forest">
+    <div class="card-title">What is Clustering and Why Does It Matter?</div>
+    <p>Clustering is the task of grouping similar data points together, without any pre-existing labels. You're asking the algorithm: <em>"What natural groups exist in this data?"</em></p>
+
+    <div class="analogy">
+      <div class="a-tag">🛍️ Analogy — Sorting Customers Without Labels</div>
+      <p>Amazon has 300 million customers. No one sat down and labeled each one "budget shopper" or "luxury buyer" or "impulse buyer." But by looking at purchase history, browsing patterns, and average spend, you can automatically group customers into meaningful segments — and then tailor marketing, recommendations, and pricing to each group.</p>
+      <p style="margin-top:8px;">That's clustering. The algorithm discovers those segments on its own.</p>
+    </div>
+
+    <div class="cw">
+      <canvas id="kmeansChart" style="max-height:280px;"></canvas>
+      <div class="clabel">K-Means with k=3: three clusters found automatically from unlabeled data.<br>Stars = cluster centroids (centers). Colors = cluster assignments.</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">How K-Means Works — The Algorithm Step by Step</div>
+    <p>K-Means is beautifully simple. It alternates between two steps until convergence:</p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="sn t">0</div>
+        <div class="sb">
+          <strong>Initialize: Choose k Starting Centroids</strong>
+          <p>Pick k random points as starting centroids (or use a smarter initialization like K-Means++). k is the number of clusters — you must specify this yourself.</p>
+          <div class="detail">This is both K-Means' main limitation and an important interview topic: <strong>you must decide k in advance</strong>. Unlike supervised learning where labels tell you how many classes exist, here you're guessing how many groups are "natural" in the data.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="sn o">1</div>
+        <div class="sb">
+          <strong>Assignment Step: Assign Each Point to Its Nearest Centroid</strong>
+          <p>For every data point, calculate the Euclidean distance to each centroid. Assign the point to the cluster whose centroid is closest.</p>
+          <div class="detail" style="font-family:'IBM Plex Mono',monospace;font-size:13px;">
+            Distance(point, centroid) = √(Σᵢ(xᵢ − μᵢ)²)<br>
+            Assign point to cluster j where distance is minimum
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="sn f">2</div>
+        <div class="sb">
+          <strong>Update Step: Recalculate Centroids</strong>
+          <p>Move each centroid to the mean position of all points assigned to it. The centroid literally moves to the "center of gravity" of its cluster.</p>
+          <div class="detail" style="font-family:'IBM Plex Mono',monospace;font-size:13px;">
+            New centroid μⱼ = (1/|Sⱼ|) × Σ xᵢ for all xᵢ in cluster j
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="sn n">3</div>
+        <div class="sb">
+          <strong>Repeat Until Convergence</strong>
+          <p>Keep alternating steps 1 and 2 until cluster assignments stop changing (or change very little). The algorithm has converged — it found stable clusters.</p>
+          <div class="detail" style="border-left-color:var(--forest);">K-Means minimizes <strong>Within-Cluster Sum of Squares (WCSS)</strong> — the total squared distance from each point to its cluster centroid. Convergence is guaranteed (though it may find a local, not global, minimum).</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cw">
+      <canvas id="kmeansSteps" style="max-height:200px;"></canvas>
+      <div class="clabel">WCSS decreases with each K-Means iteration until convergence (no more improvement).</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">The Key Challenge: Choosing k — Elbow Method</div>
+    <p>The hardest part of K-Means is choosing the right number of clusters. Too few and you merge distinct groups; too many and you split natural groups needlessly.</p>
+
+    <div class="cw">
+      <canvas id="elbowChart" style="max-height:240px;"></canvas>
+      <div class="clabel">The Elbow Method: plot WCSS vs k. The "elbow" where improvement starts diminishing is your optimal k.<br>Here, k=3 is the elbow — adding a 4th cluster barely helps.</div>
+    </div>
+
+    <div class="g2" style="margin-top:18px;">
+      <div class="tile" style="border-left:3px solid var(--teal);">
+        <div class="tile-label">Elbow Method</div>
+        <p style="font-size:13.5px;margin-top:6px;">Plot WCSS vs k. Look for the "elbow" where adding another cluster gives diminishing returns. Subjective but fast and practical.</p>
+      </div>
+      <div class="tile" style="border-left:3px solid var(--orange);">
+        <div class="tile-label">Silhouette Score</div>
+        <p style="font-size:13.5px;margin-top:6px;">For each point, measures how similar it is to its own cluster vs the nearest other cluster. Score from -1 to +1. Choose k that maximizes average silhouette score.</p>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <div class="ct">⚠️ K-Means Limitations to Know for Interviews</div>
+      <p><strong>1. Must specify k in advance</strong> — not always obvious how many clusters exist.<br>
+      <strong>2. Assumes spherical clusters</strong> — fails on elongated, crescent, or interleaved shapes.<br>
+      <strong>3. Sensitive to outliers</strong> — a single outlier can wildly distort a centroid.<br>
+      <strong>4. Sensitive to initialization</strong> — different random starts give different results. Fix: run multiple times, keep best result (or use K-Means++ for smarter initialization).<br>
+      <strong>5. Only works with numerical features</strong> — can't directly handle categorical data (use K-Modes instead).</p>
+    </div>
+
+    <div class="callout tip">
+      <div class="ct">🎯 Real Company Uses</div>
+      <p><strong>Netflix:</strong> Cluster users by viewing behavior → personalized homepage layouts.<br>
+      <strong>Uber:</strong> Cluster pickup locations → optimize driver positioning, predict surge zones.<br>
+      <strong>Google:</strong> Cluster news articles by topic → group similar stories in Google News.<br>
+      <strong>Credit card companies:</strong> Cluster transactions → identify unusual spending patterns (fraud detection).</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════ PANEL 04: PCA ══════════ -->
+<div id="panel-pca" class="panel">
+  <div class="sh-tag">Unsupervised Learning · Dimensionality Reduction</div>
+  <div class="sh-title">Principal Component <em>Analysis</em></div>
+  <div class="sh-desc">The go-to technique for handling data with too many features. Compresses information while losing as little as possible.</div>
+
+  <div class="card navy">
+    <div class="card-title">The Problem — The Curse of Dimensionality</div>
+    <p>Imagine you have a dataset with 1,000 features per customer (browsing history, purchase history, demographics, device types, location data...). Three problems arise:</p>
+    <div class="g3" style="margin-top:16px;">
+      <div class="tile" style="border-top:3px solid var(--rose);">
+        <div class="tile-label">Problem 1: Computation</div>
+        <p style="font-size:13.5px;margin-top:6px;">Training models on 1,000 features is slow and expensive. Many real-world datasets have even more features — genomic data has 20,000+ genes.</p>
+      </div>
+      <div class="tile" style="border-top:3px solid var(--orange);">
+        <div class="tile-label">Problem 2: Overfitting</div>
+        <p style="font-size:13.5px;margin-top:6px;">With 1,000 features and 500 training examples, every model overfits. You need vastly more data than features for reliable learning.</p>
+      </div>
+      <div class="tile" style="border-top:3px solid var(--navy);">
+        <div class="tile-label">Problem 3: Redundancy</div>
+        <p style="font-size:13.5px;margin-top:6px;">Many features are highly correlated. "Total spend" and "average transaction value" carry overlapping information — you don't need both.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">What PCA Does — In Plain English</div>
+    <p>PCA finds a new, smaller set of features (called <strong>principal components</strong>) that capture most of the useful variation in your original data. Think of it as creating a "summary" of your data that's smaller but nearly as informative.</p>
+
+    <div class="analogy">
+      <div class="a-tag">📸 Analogy — Taking a Shadow Photograph</div>
+      <p>Imagine a complex 3D sculpture. You want to capture it in a 2D photo. If you photograph it from the front, you lose all depth information. But if you find the <em>best angle</em> — the one that captures the most interesting features (not a straight-on profile) — your 2D photo conveys much more about the 3D object.</p>
+      <p style="margin-top:8px;">PCA finds that "best angle" mathematically. The first principal component is the direction of maximum variance — the axis that spreads the data out the most. The second is the next best direction (perpendicular to the first). And so on. By keeping only the first few components, you get a compressed, most-informative representation.</p>
+    </div>
+
+    <div class="cw">
+      <canvas id="pcaChart" style="max-height:260px;"></canvas>
+      <div class="clabel">PCA: the first principal component (PC1) captures the most variance in the data.<br>PC2 captures the next most. Together they represent most of the data's structure in fewer dimensions.</div>
+    </div>
+
+    <div class="formula navy">
+      <span class="cm">// PCA Step-by-Step</span><br>
+      1. <span class="hl">Standardize</span> the data (mean=0, std=1 for each feature)<br>
+      2. Compute the <span class="hl">covariance matrix</span> of the features<br>
+      3. Find <span class="hl">eigenvectors and eigenvalues</span> of the covariance matrix<br>
+      4. Sort eigenvectors by <span class="hl">decreasing eigenvalue</span> (most variance first)<br>
+      5. Select top k eigenvectors → these are your <span class="hl">principal components</span><br>
+      6. Project data onto new k-dimensional space
+    </div>
+
+    <div class="callout warn">
+      <div class="ct">⚠️ Step 1 is Critical — Always Standardize First</div>
+      <p>If one feature is "income" (values in thousands) and another is "age" (values 0-100), PCA will think income varies far more — and make it the dominant component — even though the variation is just due to different units. <strong>Always standardize to zero mean and unit variance before running PCA.</strong> This is one of the most common interview follow-up questions.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">How Much Variance Do You Retain? — Explained Variance Ratio</div>
+    <p>After running PCA, you need to decide how many principal components to keep. The <strong>explained variance ratio</strong> tells you what percentage of the total data variance each component captures.</p>
+
+    <div class="cw">
+      <canvas id="varianceChart" style="max-height:240px;"></canvas>
+      <div class="clabel">Scree plot: variance explained by each principal component.<br>Cumulative line reaches 90% by PC4 — keeping 4 components out of 10 retains most information.</div>
+    </div>
+
+    <div class="g2" style="margin-top:16px;">
+      <div class="tile">
+        <div class="tile-label">Typical Threshold</div>
+        <p style="font-size:13.5px;margin-top:6px;">Keep enough components to explain 90-95% of total variance. In the chart above, 4 components explain ~90% of variance from 10 original features — 60% reduction in dimensionality.</p>
+      </div>
+      <div class="tile">
+        <div class="tile-label">Trade-off</div>
+        <p style="font-size:13.5px;margin-top:6px;">Fewer components = faster training, less overfitting, but some information lost. More components = more complete picture, but less compression benefit. Choose based on downstream task performance.</p>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <div class="ct">🎯 Interview: PCA Pitfalls (Must Know)</div>
+      <p><strong>1. Assumes linear relationships</strong> — PCA is a linear method. If features have nonlinear relationships, use t-SNE or UMAP instead (for visualization).<br>
+      <strong>2. Sensitive to outliers</strong> — one outlier can dominate a principal component direction. Consider robust PCA for noisy data.<br>
+      <strong>3. Loss of interpretability</strong> — principal components are linear combinations of original features. "PC1" doesn't mean anything to a business stakeholder the way "age" or "income" does.<br>
+      <strong>4. Only works on numerical features</strong> — must encode categoricals before applying PCA.</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════ PANEL 05: NEURAL NETWORKS ══════════ -->
+<div id="panel-nn" class="panel">
+  <div class="sh-tag">Deep Learning · Foundation</div>
+  <div class="sh-title">Neural <em>Networks</em></div>
+  <div class="sh-desc">Inspired by the human brain. The engine behind image recognition, language models, and self-driving cars. Everything you need to know — from first principles.</div>
+
+  <div class="card violet">
+    <div class="card-title">Where Does the Inspiration Come From?</div>
+    <p>Your brain has about 86 billion neurons. Each neuron receives signals from thousands of others, processes them, and either fires a signal forward or doesn't. Complex thought, creativity, language — all emerge from this massive network of simple signal processors.</p>
+    <p>Neural networks are a mathematical abstraction of this idea. Individual "artificial neurons" (perceptrons) are simple. But connected in massive networks, they can learn extraordinarily complex patterns — faces, speech, text, strategy games.</p>
+
+    <div class="analogy">
+      <div class="a-tag">🏭 Analogy — The Assembly Line of Transformations</div>
+      <p>Imagine a factory assembly line where raw materials (your input data) go through a series of specialized stations (layers). Each station transforms the material slightly — shaping, filtering, combining — until the final station outputs the finished product (the prediction).</p>
+      <p style="margin-top:8px;">Each station (layer) learns what transformation to apply automatically — not from rules, but from seeing millions of examples and adjusting based on whether the final output was right or wrong. The deeper the factory (more layers), the more complex the transformations it can learn.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">The Building Block: The Perceptron</div>
+    <p>Every neural network is built from the same basic unit: the <strong>perceptron</strong> (or neuron). It does three things:</p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="sn t">1</div>
+        <div class="sb">
+          <strong>Receive Inputs</strong>
+          <p>Take in multiple input values (x₁, x₂, ..., xₙ) — these could be pixel values, word frequencies, sensor readings, or outputs from the previous layer.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="sn o">2</div>
+        <div class="sb">
+          <strong>Compute a Weighted Sum</strong>
+          <p>Multiply each input by its learned weight (w₁, w₂, ..., wₙ), add a bias term (b), and sum everything up. This is identical to what linear regression does.</p>
+          <div class="detail" style="font-family:'IBM Plex Mono',monospace;font-size:13px;">z = w₁x₁ + w₂x₂ + ... + wₙxₙ + b = wᵀx + b</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="sn f">3</div>
+        <div class="sb">
+          <strong>Apply an Activation Function</strong>
+          <p>Pass z through an activation function to introduce non-linearity. Without this step, stacking multiple layers would be equivalent to one linear layer — the whole point of depth would be lost.</p>
+          <div class="detail" style="font-family:'IBM Plex Mono',monospace;font-size:13px;">output = σ(z)    where σ is an activation function (ReLU, sigmoid, tanh, etc.)</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="formula rose">
+      <span class="cm">// Single perceptron (neuron)</span><br>
+      z = wᵀx + b    <span class="cm">← linear combination (like linear regression)</span><br>
+      a = σ(z)       <span class="cm">← activation (adds non-linearity)</span><br><br>
+      <span class="cm">// In a full network, each layer's output becomes the next layer's input</span><br>
+      a⁽¹⁾ = σ(W⁽¹⁾x + b⁽¹⁾)      <span class="cm">← hidden layer 1</span><br>
+      a⁽²⁾ = σ(W⁽²⁾a⁽¹⁾ + b⁽²⁾)  <span class="cm">← hidden layer 2</span><br>
+      ŷ = σ(W⁽³⁾a⁽²⁾ + b⁽³⁾)     <span class="cm">← output layer</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Architecture: Layers of a Neural Network</div>
+
+    <div class="nn-diagram">
+      <div class="nn-layer">
+        <div class="nn-node n-inp">x₁</div>
+        <div class="nn-node n-inp">x₂</div>
+        <div class="nn-node n-inp">x₃</div>
+        <div class="nn-node n-inp">x₄</div>
+        <div class="nn-label">INPUT LAYER<br>(raw features)</div>
+      </div>
+      <div class="nn-arrow">→</div>
+      <div class="nn-layer">
+        <div class="nn-node n-hid">h₁</div>
+        <div class="nn-node n-hid">h₂</div>
+        <div class="nn-node n-hid">h₃</div>
+        <div class="nn-node n-hid">h₄</div>
+        <div class="nn-node n-hid">h₅</div>
+        <div class="nn-label">HIDDEN LAYER 1<br>(learned features)</div>
+      </div>
+      <div class="nn-arrow">→</div>
+      <div class="nn-layer">
+        <div class="nn-node n-hid">h₁</div>
+        <div class="nn-node n-hid">h₂</div>
+        <div class="nn-node n-hid">h₃</div>
+        <div class="nn-label">HIDDEN LAYER 2<br>(higher abstraction)</div>
+      </div>
+      <div class="nn-arrow">→</div>
+      <div class="nn-layer">
+        <div class="nn-node n-out">ŷ</div>
+        <div class="nn-label">OUTPUT LAYER<br>(prediction)</div>
+      </div>
+    </div>
+
+    <div class="g3" style="margin-top:16px;">
+      <div class="tile">
+        <div class="tile-label">Input Layer</div>
+        <p style="font-size:13.5px;margin-top:6px;">Receives raw features. One neuron per feature. No computation — just passes data forward. If you have 100 features, you have 100 input neurons.</p>
+      </div>
+      <div class="tile">
+        <div class="tile-label">Hidden Layers</div>
+        <p style="font-size:13.5px;margin-top:6px;">Where the magic happens. Each layer learns increasingly abstract representations. More layers = "deeper" network = can learn more complex patterns. But more layers also = harder to train.</p>
+      </div>
+      <div class="tile">
+        <div class="tile-label">Output Layer</div>
+        <p style="font-size:13.5px;margin-top:6px;">Produces the final prediction. For classification: one neuron per class with softmax (probabilities). For regression: one neuron with no activation (raw value).</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">CNN & RNN — The Specialized Architectures</div>
+    <div class="g2">
+      <div style="background:var(--navy-s);border:1px solid rgba(26,45,90,.2);border-radius:12px;padding:22px;">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--navy);text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px;">🖼️ CNN — Convolutional Neural Network</div>
+        <p style="font-size:14px;"><strong>Best for:</strong> Images, video, spatial data</p>
+        <p style="font-size:14px;margin-top:8px;"><strong>Key idea:</strong> Instead of connecting every neuron to every pixel (impossible for large images), CNNs use small <em>convolutional filters</em> that slide across the image detecting local features: edges, corners, textures in early layers; eyes, wheels, letters in later layers.</p>
+        <p style="font-size:14px;margin-top:8px;"><strong>Applications:</strong> Face recognition (Facebook), image classification (Google Photos), medical imaging (radiology AI), autonomous driving (Tesla).</p>
+      </div>
+      <div style="background:var(--violet-s);border:1px solid rgba(92,26,158,.2);border-radius:12px;padding:22px;">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--violet);text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px;">⏳ RNN / LSTM — Recurrent Neural Network</div>
+        <p style="font-size:14px;"><strong>Best for:</strong> Sequential data, time series, text, audio</p>
+        <p style="font-size:14px;margin-top:8px;"><strong>Key idea:</strong> Has an internal memory state that persists across time steps. What happens at t=5 influences processing at t=6. LSTMs are improved RNNs that can remember long-range dependencies (not just the last few steps).</p>
+        <p style="font-size:14px;margin-top:8px;"><strong>Applications:</strong> Language translation (early Google Translate), speech recognition, stock price forecasting, music generation.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════ PANEL 06: ACTIVATION FUNCTIONS ══════════ -->
+<div id="panel-activation" class="panel">
+  <div class="sh-tag">Neural Networks · Core Component</div>
+  <div class="sh-title">Activation <em>Functions</em></div>
+  <div class="sh-desc">The element that gives neural networks their power to learn complex, non-linear patterns. Without them, a 100-layer network would be no more powerful than a single linear equation.</div>
+
+  <div class="card rose">
+    <div class="card-title">Why Activation Functions Exist</div>
+    <p>If you stack multiple linear layers (y = Wx + b) without any activation function, the entire network collapses to a single linear transformation — no matter how many layers you add. You could have 1,000 layers and it would be equivalent to one linear equation. You'd never be able to learn anything non-linear.</p>
+
+    <div class="analogy">
+      <div class="a-tag">💡 Analogy — The Light Switch That Creates Complexity</div>
+      <p>Imagine a circuit with 100 simple on/off switches in series. If all switches are "linear pass-throughs," you just have wire — nothing interesting. But if some switches have specific trigger conditions (ON only if voltage > threshold), complex patterns emerge from their interactions. Activation functions are those trigger conditions — they turn neurons "on" or "off" in interesting ways, enabling complex pattern recognition.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">The 5 Activation Functions You Must Know</div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="sn t">1</div>
+        <div class="sb">
+          <strong>ReLU — Rectified Linear Unit (Most Common)</strong>
+          <p>σ(z) = max(0, z). If z is positive, pass it through unchanged. If negative, output 0. Dead simple — and works extraordinarily well in practice.</p>
+          <div class="detail">
+            <strong>✅ Why it's king:</strong> Computationally cheap. Doesn't suffer from vanishing gradients for positive values. Sparse activation (many neurons output 0) makes networks efficient.<br>
+            <strong>⚠️ Problem:</strong> "Dying ReLU" — if a neuron always gets negative inputs, it permanently outputs 0 and stops learning. Fix: Leaky ReLU (σ(z) = max(0.01z, z)).
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="sn o">2</div>
+        <div class="sb">
+          <strong>Sigmoid — The Probability Maker</strong>
+          <p>σ(z) = 1/(1+e⁻ᶻ). Squashes any input to (0, 1). Perfect for binary classification output layers where you need a probability.</p>
+          <div class="detail">
+            <strong>⚠️ Problem: Vanishing gradients.</strong> For very large or small z, the gradient is nearly zero — so the network stops learning in those neurons. This is why sigmoid is no longer used in hidden layers of deep networks; use ReLU instead. Still standard for binary classification output neurons.
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="sn n">3</div>
+        <div class="sb">
+          <strong>Tanh — Centered Sigmoid</strong>
+          <p>σ(z) = (eᶻ − e⁻ᶻ)/(eᶻ + e⁻ᶻ). Range (-1, +1). Similar to sigmoid but zero-centered — outputs are balanced around 0, which generally leads to faster convergence than sigmoid.</p>
+          <div class="detail"><strong>⚠️ Same vanishing gradient problem</strong> as sigmoid in deep networks. Preferred over sigmoid for hidden layers in shallow networks (e.g., LSTMs), but ReLU is usually better for deep networks.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="sn f">4</div>
+        <div class="sb">
+          <strong>Softmax — The Multi-Class Probability Machine</strong>
+          <p>σ(zᵢ) = eᶻⁱ / Σⱼeᶻʲ. Takes a vector of k values and outputs probabilities that sum to 1. Used exclusively in the output layer for multi-class classification (more than 2 classes).</p>
+          <div class="detail">
+            <strong>Example:</strong> Image classifier with 10 classes. Softmax output: [cat: 0.78, dog: 0.15, bird: 0.04, ...]. All probabilities sum to 1. Predict the class with highest probability (cat = 78%).
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="sn v">5</div>
+        <div class="sb">
+          <strong>Linear / No Activation — For Regression Output</strong>
+          <p>σ(z) = z. The output layer of a regression network uses no activation (or linear activation) because you want an unbounded real number as output — any value from -∞ to +∞ is valid.</p>
+          <div class="detail">If you accidentally used sigmoid on a regression output, predictions would be constrained to (0,1) — useless if you're predicting house prices!</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cw">
+      <canvas id="activationChart" style="max-height:240px;"></canvas>
+      <div class="clabel">All five activation functions plotted side by side.<br>Note ReLU's simplicity vs sigmoid/tanh's saturation in the extremes.</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Quick Reference — When to Use What</div>
+    <table class="tbl">
+      <thead><tr><th>Layer Type</th><th>Use This Activation</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr><td>Hidden layers (deep network)</td><td style="color:var(--forest);font-weight:600;">ReLU (default)</td><td style="font-size:13.5px;">Fast, doesn't vanish, works well in practice</td></tr>
+        <tr><td>Hidden layers (shallow, &lt;3 layers)</td><td>tanh or ReLU</td><td style="font-size:13.5px;">tanh is zero-centered, can converge faster</td></tr>
+        <tr><td>Output — binary classification</td><td style="color:var(--navy);font-weight:600;">Sigmoid</td><td style="font-size:13.5px;">Outputs probability between 0 and 1</td></tr>
+        <tr><td>Output — multi-class classification</td><td style="color:var(--violet);font-weight:600;">Softmax</td><td style="font-size:13.5px;">Outputs class probabilities summing to 1</td></tr>
+        <tr><td>Output — regression</td><td style="color:var(--orange);font-weight:600;">None (linear)</td><td style="font-size:13.5px;">Need unbounded real number output</td></tr>
+        <tr><td>LSTM gates</td><td>sigmoid + tanh</td><td style="font-size:13.5px;">Standard design of LSTM cell gates</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+<!-- ══════════ PANEL 07: BACKPROP & TRAINING ══════════ -->
+<div id="panel-backprop" class="panel">
+  <div class="sh-tag">Neural Networks · Learning Algorithm</div>
+  <div class="sh-title">Backpropagation &amp; <em>Training</em></div>
+  <div class="sh-desc">How neural networks actually learn. The algorithm that trains every modern deep learning model. Understanding this conceptually will set you apart in ML interviews.</div>
+
+  <div class="card teal">
+    <div class="card-title">Forward Pass — Making a Prediction</div>
+    <p>Training a neural network happens in two phases, repeated thousands of times. The first is the <strong>forward pass</strong>: you feed inputs through the network, layer by layer, until you get a prediction.</p>
+    <div class="steps">
+      <div class="step">
+        <div class="sn t">→</div>
+        <div class="sb">
+          <strong>Data flows forward through every layer</strong>
+          <p>Input → Layer 1 → Layer 2 → ... → Output. Each layer computes its weighted sum and activation. The final output is the model's prediction ŷ.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="sn o">📊</div>
+        <div class="sb">
+          <strong>Compute the Loss</strong>
+          <p>Compare the prediction ŷ to the true label y using a loss function. The loss measures how wrong the prediction was.</p>
+          <div class="detail" style="font-family:'IBM Plex Mono',monospace;font-size:13px;">
+            Regression: L = MSE = (1/n) Σ(yᵢ − ŷᵢ)²<br>
+            Classification: L = Cross-Entropy = −Σ yᵢ log(ŷᵢ)
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Backward Pass — Learning from Mistakes</div>
+    <p>Once you know how wrong the prediction was (the loss), you work <strong>backward</strong> through the network to figure out: "which weights were responsible for this error, and by how much?"</p>
+
+    <div class="analogy">
+      <div class="a-tag">🏆 Analogy — Post-Game Film Review</div>
+      <p>Your team just lost a football game. You watch the film review backwards from the final score: who missed the last tackle? (Output layer). Who failed to cover them? (Layer before). Who lost their assignment at the snap? (Earlier layers). You assign blame backward through the sequence of events to the root causes.</p>
+      <p style="margin-top:8px;">Backpropagation does exactly this: it assigns "blame" (gradient) to each weight in the network, working backward from the output loss to the first layer, using the chain rule of calculus.</p>
+    </div>
+
+    <div class="formula teal">
+      <span class="cm">// The key equation: chain rule for computing gradients</span><br>
+      ∂L/∂w = (∂L/∂z) × (∂z/∂w)<br><br>
+      <span class="cm">// For a multi-layer network, apply chain rule repeatedly</span><br>
+      ∂L/∂w⁽¹⁾ = ∂L/∂a⁽³⁾ × ∂a⁽³⁾/∂a⁽²⁾ × ∂a⁽²⁾/∂a⁽¹⁾ × ∂a⁽¹⁾/∂w⁽¹⁾<br><br>
+      <span class="cm">// Then update each weight in the direction that reduces loss</span><br>
+      w ← w − α × <span class="hl">∂L/∂w</span>    (α = learning rate)
+    </div>
+
+    <div class="callout warn">
+      <div class="ct">⚠️ The Vanishing Gradient Problem</div>
+      <p>In very deep networks, the gradient gets multiplied at each layer as it flows backward. If activation functions (like sigmoid/tanh) produce small gradients (between 0 and 1), and you multiply them across 20+ layers, the gradient approaches zero. Early layers get essentially no learning signal — they stop improving.</p>
+      <p style="margin-top:8px;"><strong>Solutions:</strong> Use ReLU instead of sigmoid (gradients don't vanish for positive inputs). Use residual connections (skip connections) like in ResNets. Use batch normalization. Use gradient clipping for RNNs.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Regularization in Neural Networks</div>
+    <div class="g2">
+      <div>
+        <p><strong style="color:var(--teal);">Dropout</strong></p>
+        <p style="font-size:14.5px;margin-top:6px;">During each training step, randomly "drop" (set to zero) a fraction of neurons (typically 20-50%). The network can't rely on any single neuron and must learn redundant representations. At test time, all neurons are active.</p>
+        <div class="callout teal" style="margin-top:10px;">
+          <div class="ct">💡 Intuition</div>
+          <p>Like a sports team that practices with random players sitting out — the team can't rely on any single star player and everyone learns to cover multiple positions. The team becomes more robust.</p>
+        </div>
+      </div>
+      <div>
+        <p><strong style="color:var(--navy);">Batch Normalization</strong></p>
+        <p style="font-size:14.5px;margin-top:6px;">Normalize the inputs to each layer so they have zero mean and unit variance. This stabilizes training, allows much higher learning rates, and acts as a mild regularizer.</p>
+        <p style="font-size:14px;margin-top:10px;color:var(--ink3);">Applied between the linear operation and the activation function in each layer. Used in almost all modern deep learning architectures.</p>
+        <div class="callout info" style="margin-top:10px;">
+          <div class="ct">💡 Effect</div>
+          <p>Dramatically speeds up training. Networks that would take 100 epochs without BatchNorm can converge in 10 with it.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════ PANEL 08: GRADIENT DESCENT ══════════ -->
+<div id="panel-gd" class="panel">
+  <div class="sh-tag">Machine Learning · Optimization</div>
+  <div class="sh-title">Gradient <em>Descent</em></div>
+  <div class="sh-desc">The universal learning algorithm. Nearly every ML model — from linear regression to neural networks — uses some form of gradient descent to learn its parameters.</div>
+
+  <div class="card orange">
+    <div class="card-title">The Core Idea — Hiking Down a Mountain Blindfolded</div>
+
+    <div class="analogy">
+      <div class="a-tag">⛰️ Analogy — Finding the Valley in Fog</div>
+      <p>Imagine you're blindfolded on a hilly landscape trying to reach the lowest valley. You can feel the slope of the ground beneath your feet. Your strategy: at each step, feel which direction slopes downward the steepest — and take a small step that way. Repeat. Eventually you'll reach a valley (maybe not the absolute lowest, but a valley).</p>
+      <p style="margin-top:8px;">That's gradient descent. The "landscape" is your loss function (how wrong your model is). The "valley" is the minimum loss. At each step, you calculate the gradient (slope of the loss) and move the weights in the direction that reduces loss.</p>
+    </div>
+
+    <div class="cw">
+      <canvas id="gdChart" style="max-height:260px;"></canvas>
+      <div class="clabel">Gradient descent minimizes the loss function by taking steps opposite to the gradient direction.<br>Learning rate controls step size. Too large = overshoot. Too small = slow convergence.</div>
+    </div>
+
+    <div class="formula">
+      <span class="cm">// The update rule — applied to every weight in the model</span><br>
+      w_new = w_old − <span class="hl">α</span> × ∂L/∂w<br><br>
+      <span class="hl">α</span> = learning rate (how big a step to take)<br>
+      ∂L/∂w = gradient (which direction increases loss, so we go opposite)<br><br>
+      <span class="cm">// This is repeated for every parameter, thousands of times</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">The Three Flavors of Gradient Descent</div>
+    <p>The question is: how much data do you use to compute the gradient at each step? There are three approaches, each with different trade-offs.</p>
+
+    <div class="g3">
+      <div style="background:var(--navy-s);border:1px solid rgba(26,45,90,.2);border-radius:12px;padding:20px;">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--navy);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;">Batch Gradient Descent</div>
+        <p style="font-size:14px;"><strong>Uses: ALL training data</strong> per update step.</p>
+        <p style="font-size:13.5px;margin-top:8px;color:var(--ink3);">Computes the true gradient. Very accurate direction. But if you have 10 million examples, one update takes forever.</p>
+        <div style="margin-top:10px;"><span class="tag tag-navy">Accurate</span><span class="tag tag-rose">Very slow</span></div>
+      </div>
+      <div style="background:var(--teal-s);border:1px solid rgba(13,110,110,.2);border-radius:12px;padding:20px;">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--teal);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;">Stochastic (SGD)</div>
+        <p style="font-size:14px;"><strong>Uses: ONE random example</strong> per update step.</p>
+        <p style="font-size:13.5px;margin-top:8px;color:var(--ink3);">Very fast updates. Noisy gradient — direction is approximate. But the noise can help escape local minima. Standard for most modern deep learning.</p>
+        <div style="margin-top:10px;"><span class="tag tag-teal">Fast</span><span class="tag tag-orange">Noisy path</span></div>
+      </div>
+      <div style="background:var(--forest-s);border:1px solid rgba(26,92,53,.2);border-radius:12px;padding:20px;">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--forest);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;">Mini-Batch (Best of Both)</div>
+        <p style="font-size:14px;"><strong>Uses: small batch</strong> (32–256 examples) per step.</p>
+        <p style="font-size:13.5px;margin-top:8px;color:var(--ink3);">Best trade-off. Less noisy than SGD, much faster than full batch. Leverages GPU parallelism efficiently. The standard in practice.</p>
+        <div style="margin-top:10px;"><span class="tag tag-forest">Industry standard</span><span class="tag tag-teal">GPU-efficient</span></div>
+      </div>
+    </div>
+
+    <div class="callout tip" style="margin-top:20px;">
+      <div class="ct">🎯 Amazon Interview — Gradient Descent & SGD</div>
+      <p><strong>"Describe gradient descent and the motivations behind stochastic gradient descent."</strong></p>
+      <p style="margin-top:10px;"><strong>Model answer:</strong> "Gradient descent minimizes a loss function by iteratively updating model parameters in the direction of steepest descent — subtracting α × gradient at each step. Full batch gradient descent uses all training data per update, which is too slow for large datasets. SGD uses a single random example per update — much faster, but the gradient is noisy and the path to convergence is jagged. Mini-batch SGD uses small batches (32-256 examples), combining the efficiency of SGD with smoother gradient estimates. It also leverages GPU parallelism, making it the industry standard."</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">The Learning Rate — The Most Important Hyperparameter</div>
+    <div class="cw">
+      <canvas id="lrChart" style="max-height:220px;"></canvas>
+      <div class="clabel">Effect of learning rate on gradient descent convergence.<br>Too small: never reaches minimum. Too large: overshoots and diverges. Just right: smooth convergence.</div>
+    </div>
+    <div class="g3" style="margin-top:16px;">
+      <div class="tile" style="border-top:3px solid var(--rose);">
+        <div class="tile-label">α too small</div>
+        <p style="font-size:13.5px;margin-top:6px;">Training takes forever. May get stuck before reaching the minimum. Can also get trapped in poor local minima.</p>
+      </div>
+      <div class="tile" style="border-top:3px solid var(--forest);">
+        <div class="tile-label">α just right</div>
+        <p style="font-size:13.5px;margin-top:6px;">Smooth, efficient convergence. Loss decreases steadily. This is what you aim for with learning rate schedules or adaptive methods (Adam, RMSprop).</p>
+      </div>
+      <div class="tile" style="border-top:3px solid var(--orange);">
+        <div class="tile-label">α too large</div>
+        <p style="font-size:13.5px;margin-top:6px;">Overshoots the minimum. Loss oscillates wildly or even increases. Training diverges. Model never learns.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════ PANEL 09: ML SYSTEM DESIGN ══════════ -->
+<div id="panel-design" class="panel">
+  <div class="sh-tag">Applied Machine Learning · End-to-End</div>
+  <div class="sh-title">ML System <em>Design</em></div>
+  <div class="sh-desc">The most important skill for senior DS roles — thinking through a complete ML solution from business problem to deployed model. This is how every great ML interview answer is structured.</div>
+
+  <div class="card forest">
+    <div class="card-title">The 8-Step Framework</div>
+    <p>When an interviewer asks "How would you build an ML model for X?", they're not just testing algorithm knowledge. They want to see that you think like an engineer — end to end. Here's the framework your book uses:</p>
+    <div class="steps">
+      <div class="step"><div class="sn t">1</div><div class="sb"><strong>Clarify the Problem</strong><p>What business goal are we solving? What does success look like? What are the constraints (latency, compute budget, data availability)?</p></div></div>
+      <div class="step"><div class="sn o">2</div><div class="sb"><strong>Define Metrics</strong><p>What will you optimize for? How will you know if the model is good enough to ship? Offline metrics (AUC, RMSE) vs online metrics (click-through rate, conversion).</p></div></div>
+      <div class="step"><div class="sn n">3</div><div class="sb"><strong>Collect & Understand Data</strong><p>What data is available? How much? How clean? Any class imbalance? What features might matter?</p></div></div>
+      <div class="step"><div class="sn f">4</div><div class="sb"><strong>Feature Engineering</strong><p>Transform raw data into model-ready features. Handle missing values, encode categoricals, create derived features. Often the highest-impact step.</p></div></div>
+      <div class="step"><div class="sn v">5</div><div class="sb"><strong>Model Selection</strong><p>Given your constraints, which algorithm class fits best? Consider: data size, interpretability needs, latency requirements, categorical vs numerical features.</p></div></div>
+      <div class="step"><div class="sn r">6</div><div class="sb"><strong>Training & Validation</strong><p>Train-validation-test split. Cross-validation. Hyperparameter tuning. Compare multiple models. Watch for overfitting.</p></div></div>
+      <div class="step"><div class="sn t">7</div><div class="sb"><strong>Evaluation & Iteration</strong><p>Evaluate on held-out test set. Analyze errors. Where does the model fail? Iterate on features and models. Is offline performance good enough to justify A/B testing?</p></div></div>
+      <div class="step"><div class="sn o">8</div><div class="sb"><strong>Deployment & Monitoring</strong><p>How does the model serve predictions? Batch vs real-time? Monitor for data drift, model performance decay. Plan for retraining cadence.</p></div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Worked Example — Robinhood: Predict User Churn</div>
+
+    <div style="background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:20px;margin-bottom:20px;">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--forest);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;">📱 Robinhood Interview Question (from your book)</div>
+      <p><strong>"Walk me through how you'd build a model to predict whether a Robinhood user will churn."</strong></p>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="sn t">1</div>
+        <div class="sb">
+          <strong>Clarify: What is "churn" exactly?</strong>
+          <p>Key question before anything: how do we define churn? A user who hasn't logged in for 30 days? Who withdrew all funds? Who hasn't made a trade in 60 days? I'd ask the interviewer to confirm the definition. Let's say: user has not opened the app in 30 days.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="sn o">2</div>
+        <div class="sb">
+          <strong>Metrics</strong>
+          <p>Primary: Recall (we'd rather flag a churning user who didn't churn than miss a churner — false negatives are more costly). Also track Precision and AUC-ROC to balance false positives. Offline: AUC-ROC, F1. Online: 30-day retention rate of users we acted on.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="sn n">3</div>
+        <div class="sb">
+          <strong>Features to Build</strong>
+          <ul>
+            <li>Days since last login, last trade, last deposit</li>
+            <li>Trading frequency (trades per week, past month)</li>
+            <li>Portfolio performance (are they losing money?)</li>
+            <li>Account balance (how much skin in the game)</li>
+            <li>Feature usage (watchlist adds, news reads, options activity)</li>
+            <li>Support tickets opened (frustration signal)</li>
+            <li>Deposit/withdrawal history (recent withdrawals = churn signal)</li>
+          </ul>
+        </div>
+      </div>
+      <div class="step">
+        <div class="sn f">4</div>
+        <div class="sb">
+          <strong>Model Selection</strong>
+          <p>Start with Logistic Regression as interpretable baseline (important for financial product — you need to explain to regulators why you're targeting users). Then try Gradient Boosting (XGBoost) for better performance. Compare on held-out validation set.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="sn v">5</div>
+        <div class="sb">
+          <strong>Handle Class Imbalance</strong>
+          <p>If only 5% of users churn in a given window, accuracy is misleading (predict "no churn" always = 95% accuracy, but useless). Use: class weights in the loss function, or oversample the minority class with SMOTE, and evaluate with AUC-ROC not accuracy.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="sn r">6</div>
+        <div class="sb">
+          <strong>Deployment</strong>
+          <p>Run predictions daily (batch, not real-time — no need for sub-second latency on churn). Trigger retention campaigns for users with predicted churn probability > 70%. Monitor: does targeting predicted churners actually reduce churn? A/B test the intervention strategy.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">The Model Selection Cheat Sheet</div>
+    <table class="tbl">
+      <thead><tr><th>Situation</th><th>Start With</th><th>Then Try</th></tr></thead>
+      <tbody>
+        <tr><td>Tabular data, need interpretability</td><td style="color:var(--forest);">Logistic Regression</td><td>Random Forest, then explain with SHAP</td></tr>
+        <tr><td>Tabular data, maximize performance</td><td style="color:var(--forest);">XGBoost / LightGBM</td><td>Neural network if data is large enough</td></tr>
+        <tr><td>Image / video data</td><td style="color:var(--navy);">CNN (pretrained, transfer learning)</td><td>Custom CNN if enough labeled images</td></tr>
+        <tr><td>Text / sequential data</td><td style="color:var(--violet);">BERT / transformer (fine-tune)</td><td>Custom LSTM if domain is specialized</td></tr>
+        <tr><td>Very small dataset</td><td style="color:var(--orange);">Naive Bayes or Logistic Reg.</td><td>SVM with RBF kernel</td></tr>
+        <tr><td>High-dimensional, few samples</td><td style="color:var(--teal);">SVM or Regularized Regression</td><td>Random Forest</td></tr>
+        <tr><td>Anomaly detection, no labels</td><td style="color:var(--rose);">Isolation Forest or K-Means</td><td>Autoencoder (if patterns are complex)</td></tr>
+        <tr><td>Need fast predictions, low latency</td><td>Logistic Regression, shallow tree</td><td>Distill larger model into smaller one</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+<!-- ══════════ PANEL 10: CHEAT SHEET ══════════ -->
+<div id="panel-cheat" class="panel">
+  <div class="sh-tag">Quick Reference</div>
+  <div class="sh-title">The Master <em>Cheat Sheet</em></div>
+  <div class="sh-desc">Every algorithm, every key concept, and every interview answer template — consolidated in one place.</div>
+
+  <div class="card">
+    <div class="card-title">Algorithm Comparison at a Glance</div>
+    <table class="tbl">
+      <thead><tr><th>Algorithm</th><th>Type</th><th>Key Idea</th><th>Best For</th><th>Watch Out For</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Linear Regression</strong></td><td><span class="tag tag-teal">Supervised</span></td><td>Fit line to minimize RSS</td><td>Continuous output, interpretability</td><td>5 assumptions; doesn't handle nonlinearity</td></tr>
+        <tr><td><strong>Logistic Regression</strong></td><td><span class="tag tag-teal">Supervised</span></td><td>Sigmoid squashes to [0,1]</td><td>Binary classification, interpretability</td><td>Linear boundary only; correlated features</td></tr>
+        <tr><td><strong>Decision Tree</strong></td><td><span class="tag tag-teal">Supervised</span></td><td>Recursive binary splits on info gain</td><td>Interpretability, mixed feature types</td><td>Severe overfitting; high variance</td></tr>
+        <tr><td><strong>Random Forest</strong></td><td><span class="tag tag-teal">Supervised</span></td><td>Bagging + random features → average</td><td>Tabular data, feature importance</td><td>Slow to predict; black box</td></tr>
+        <tr><td><strong>XGBoost</strong></td><td><span class="tag tag-teal">Supervised</span></td><td>Sequential trees on residuals</td><td>Max performance on tabular data</td><td>Overfits if not tuned; sequential (slow train)</td></tr>
+        <tr><td><strong>SVM</strong></td><td><span class="tag tag-teal">Supervised</span></td><td>Maximize margin; kernel trick for nonlinear</td><td>High-dimensional, small datasets</td><td>Slow on large n; no probabilities</td></tr>
+        <tr><td><strong>Naive Bayes</strong></td><td><span class="tag tag-teal">Supervised</span></td><td>Bayes' theorem + independence assumption</td><td>Text classification, tiny datasets</td><td>Independence assumption usually wrong</td></tr>
+        <tr><td><strong>Neural Network</strong></td><td><span class="tag tag-teal">Supervised</span></td><td>Layers of weighted sums + activations</td><td>Images, text, audio, large complex data</td><td>Needs huge data; black box; expensive</td></tr>
+        <tr><td><strong>K-Means</strong></td><td><span class="tag tag-orange">Unsupervised</span></td><td>Assign to nearest centroid, update centroids</td><td>Customer segmentation, compression</td><td>Must choose k; assumes spherical clusters</td></tr>
+        <tr><td><strong>PCA</strong></td><td><span class="tag tag-orange">Unsupervised</span></td><td>Find directions of max variance</td><td>Dimensionality reduction, noise removal</td><td>Linear only; must standardize first</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="g2">
+    <div class="card">
+      <div class="card-title">Bias-Variance Quick Reference</div>
+      <table class="tbl">
+        <thead><tr><th>Symptom</th><th>Problem</th><th>Fix</th></tr></thead>
+        <tbody>
+          <tr><td>High train error AND high test error</td><td style="color:var(--rose);">High Bias</td><td>More complex model, more features, less regularization</td></tr>
+          <tr><td>Low train error, high test error</td><td style="color:var(--orange);">High Variance</td><td>More data, regularization, simpler model, dropout</td></tr>
+          <tr><td>Both train and test error low</td><td style="color:var(--forest);">✅ Good fit</td><td>Ship it!</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-title">Metric Selection Guide</div>
+      <table class="tbl">
+        <thead><tr><th>Situation</th><th>Use This Metric</th></tr></thead>
+        <tbody>
+          <tr><td>Imbalanced classes</td><td style="color:var(--teal);">AUC-ROC, F1, Precision/Recall</td></tr>
+          <tr><td>FP is costly (spam filter)</td><td style="color:var(--navy);">Precision ↑</td></tr>
+          <tr><td>FN is costly (cancer, fraud)</td><td style="color:var(--rose);">Recall ↑</td></tr>
+          <tr><td>Balanced classes, equal cost</td><td>Accuracy, F1</td></tr>
+          <tr><td>Regression, outliers matter</td><td>MSE (penalizes large errors)</td></tr>
+          <tr><td>Regression, robust to outliers</td><td>MAE</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">The 10 Interview Answers You Must Deliver Perfectly</div>
+    <div class="steps">
+      <div class="step"><div class="sn t">Q</div><div class="sb"><strong>What is the bias-variance trade-off?</strong><p>"Total error = Bias² + Variance + Irreducible noise. High bias = model too simple, underfits. High variance = model too complex, overfits. Reducing one tends to increase the other — find the sweet spot."</p></div></div>
+      <div class="step"><div class="sn o">Q</div><div class="sb"><strong>How does a Random Forest reduce overfitting?</strong><p>"Two ways: bagging (each tree sees a random bootstrap sample) and random feature selection at each split (prevents important features from dominating all trees). Averaging many diverse, slightly wrong trees produces a much better estimate than any single tree."</p></div></div>
+      <div class="step"><div class="sn n">Q</div><div class="sb"><strong>What's the difference between L1 and L2 regularization?</strong><p>"Both add a complexity penalty to reduce overfitting. L1 (Lasso) uses absolute values — zeros out unimportant features entirely, enabling feature selection. L2 (Ridge) uses squared values — shrinks all features but rarely zeros them. Use L1 when few features matter; L2 when many features are all somewhat relevant."</p></div></div>
+      <div class="step"><div class="sn f">Q</div><div class="sb"><strong>When would you use SVM vs logistic regression?</strong><p>"SVM when: high dimensions, small dataset, clear margin between classes, need non-linear boundaries with kernel. Logistic regression when: need probability outputs, need interpretability, large dataset, features are correlated."</p></div></div>
+      <div class="step"><div class="sn v">Q</div><div class="sb"><strong>How do you choose k in K-Means?</strong><p>"Elbow method: plot WCSS vs k, pick k at the 'elbow' where improvements diminish. Silhouette score: pick k that maximizes average silhouette. Business intuition: sometimes you know how many segments make sense (e.g., 3 customer tiers)."</p></div></div>
+      <div class="step"><div class="sn r">Q</div><div class="sb"><strong>What is gradient descent?</strong><p>"An optimization algorithm that minimizes a loss function by iteratively updating parameters in the direction of steepest descent. At each step: w ← w − α × ∂L/∂w. SGD uses one random sample per step (fast, noisy); mini-batch SGD uses small batches (industry standard, GPU-efficient)."</p></div></div>
+      <div class="step"><div class="sn t">Q</div><div class="sb"><strong>Why use ReLU instead of sigmoid in hidden layers?</strong><p>"Sigmoid saturates for large positive/negative inputs — gradient approaches 0, causing vanishing gradients in deep networks. ReLU's gradient is 1 for positive inputs and 0 for negative — doesn't vanish on the positive side. Also computationally cheaper. The dying ReLU problem (neurons stuck at 0) is addressed with Leaky ReLU."</p></div></div>
+      <div class="step"><div class="sn o">Q</div><div class="sb"><strong>What is PCA and what are its limitations?</strong><p>"PCA finds orthogonal directions of maximum variance and projects data onto a lower-dimensional space. Limitations: linear only, requires standardized features, loses interpretability (components are linear combinations), sensitive to outliers."</p></div></div>
+      <div class="step"><div class="sn n">Q</div><div class="sb"><strong>How would you handle class imbalance?</strong><p>"First, use appropriate metrics (AUC-ROC, not accuracy). Then: oversample minority class (SMOTE), undersample majority class, use class weights in loss function, or collect more data for minority class. Evaluate carefully on held-out test set that reflects real class distribution."</p></div></div>
+      <div class="step"><div class="sn f">Q</div><div class="sb"><strong>What is cross-validation and why use it?</strong><p>"Split data into k folds, train on k-1, test on remaining fold, rotate. Average k test scores. Gives an unbiased estimate of generalization performance without wasting data on a fixed validation set. Use 5-fold or 10-fold in practice. Don't use standard k-fold for time series — use forward chaining instead."</p></div></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- JAVASCRIPT -->
+<script>
+Chart.defaults.color='#9a8f80';
+Chart.defaults.borderColor='#ccc4b4';
+Chart.defaults.font.family="'Space Grotesk',sans-serif";
+Chart.defaults.font.size=12;
+
+function rng(a,b){return Math.random()*(b-a)+a;}
+function range(a,b,s){let r=[];for(let i=a;i<=b+1e-9;i=Math.round((i+s)*1e5)/1e5)r.push(i);return r;}
+function normalPDF(x,mu,sig){return(1/(sig*Math.sqrt(2*Math.PI)))*Math.exp(-0.5*((x-mu)/sig)**2);}
+
+// SVM CHART
+{
+  const groupA=Array.from({length:20},()=>({x:rng(-3,-0.5),y:rng(-3,2.5)+rng(-0.5,0.5)}));
+  const groupB=Array.from({length:20},()=>({x:rng(0.5,3),y:rng(-2.5,3)+rng(-0.5,0.5)}));
+  const boundary=[{x:-1,y:-4},{x:-1,y:4}];
+  const m1=[{x:-1.8,y:-4},{x:-1.8,y:4}];
+  const m2=[{x:-0.2,y:-4},{x:-0.2,y:4}];
+  new Chart(document.getElementById('svmChart'),{
+    type:'scatter',
+    data:{datasets:[
+      {label:'Class A',data:groupA,backgroundColor:'rgba(13,110,110,0.7)',pointRadius:6},
+      {label:'Class B',data:groupB,backgroundColor:'rgba(158,31,58,0.7)',pointRadius:6},
+      {type:'line',label:'Decision Boundary',data:boundary,borderColor:'#1a2d5a',fill:false,pointRadius:0,borderWidth:3},
+      {type:'line',label:'Margin',data:m1,borderColor:'#1a2d5a',fill:false,pointRadius:0,borderWidth:1.5,borderDash:[6,4]},
+      {type:'line',label:'Margin',data:m2,borderColor:'#1a2d5a',fill:false,pointRadius:0,borderWidth:1.5,borderDash:[6,4]}
+    ]},
+    options:{plugins:{legend:{position:'top'}},scales:{x:{min:-4,max:4},y:{min:-4,max:4}}}
+  });
+}
+
+// KERNEL CHART
+{
+  const spiral1=Array.from({length:25},(_,i)=>{const a=i/25*Math.PI*2,r=1+rng(-0.2,0.2);return{x:r*Math.cos(a),y:r*Math.sin(a)};});
+  const inner=Array.from({length:15},()=>{const a=rng(0,Math.PI*2),r=rng(0,0.5);return{x:r*Math.cos(a),y:r*Math.sin(a)};});
+  new Chart(document.getElementById('kernelChart'),{
+    type:'scatter',
+    data:{datasets:[
+      {label:'Outer (Class A)',data:spiral1,backgroundColor:'rgba(13,110,110,0.7)',pointRadius:6},
+      {label:'Inner (Class B)',data:inner,backgroundColor:'rgba(158,31,58,0.7)',pointRadius:6}
+    ]},
+    options:{plugins:{legend:{position:'top'},title:{display:true,text:'Non-linear data — needs RBF kernel'}},scales:{x:{min:-2,max:2},y:{min:-2,max:2}}}
+  });
+}
+
+// K-MEANS CHART
+{
+  const c1=Array.from({length:25},()=>({x:rng(-4,-1.5),y:rng(1,4)}));
+  const c2=Array.from({length:25},()=>({x:rng(0,3.5),y:rng(0,3.5)}));
+  const c3=Array.from({length:20},()=>({x:rng(-2,2),y:rng(-4,-1)}));
+  new Chart(document.getElementById('kmeansChart'),{
+    type:'scatter',
+    data:{datasets:[
+      {label:'Cluster 1',data:c1,backgroundColor:'rgba(13,110,110,0.65)',pointRadius:6},
+      {label:'Cluster 2',data:c2,backgroundColor:'rgba(26,45,90,0.65)',pointRadius:6},
+      {label:'Cluster 3',data:c3,backgroundColor:'rgba(196,92,0,0.65)',pointRadius:6},
+      {label:'Centroids',data:[{x:-2.5,y:2.5},{x:1.75,y:1.75},{x:0,y:-2.5}],backgroundColor:'#1a1610',pointRadius:12,pointStyle:'star'}
+    ]},
+    options:{plugins:{legend:{position:'top'}},scales:{x:{min:-5,max:5},y:{min:-5,max:5}}}
+  });
+}
+
+// K-MEANS STEPS
+{
+  new Chart(document.getElementById('kmeansSteps'),{
+    type:'line',
+    data:{labels:['Init','Iter 1','Iter 2','Iter 3','Iter 4','Converged'],datasets:[{
+      label:'Within-Cluster Sum of Squares',
+      data:[280,180,120,90,82,80],
+      borderColor:'#0d6e6e',backgroundColor:'rgba(13,110,110,0.1)',fill:true,tension:0.3,pointRadius:5,borderWidth:2.5
+    }]},
+    options:{plugins:{legend:{display:false}},scales:{y:{title:{display:true,text:'WCSS (lower=better)'}},x:{title:{display:true,text:'Iteration'}}}}
+  });
+}
+
+// ELBOW CHART
+{
+  const wcss=[320,210,140,95,85,80,78,77,76.5,76];
+  new Chart(document.getElementById('elbowChart'),{
+    type:'line',
+    data:{labels:range(1,10,1).map(k=>'k='+k),datasets:[{
+      label:'WCSS',
+      data:wcss,
+      borderColor:'#1a5c35',backgroundColor:'rgba(26,92,53,0.1)',fill:true,tension:0.3,
+      pointRadius:wcss.map((_,i)=>i===2?10:5),
+      pointBackgroundColor:wcss.map((_,i)=>i===2?'#c45c00':'#1a5c35'),
+      borderWidth:2.5
+    }]},
+    options:{plugins:{legend:{display:false},title:{display:true,text:'Elbow at k=3 → optimal cluster count'}},scales:{y:{title:{display:true,text:'WCSS'}},x:{title:{display:true,text:'Number of Clusters (k)'}}}}
+  });
+}
+
+// PCA CHART
+{
+  const pts=Array.from({length:50},()=>{const t=rng(-3,3);return{x:t+rng(-0.6,0.6),y:0.7*t+rng(-0.8,0.8)};});
+  const pc1=[{x:-3.5,y:-2.45},{x:3.5,y:2.45}];
+  const pc2=[{x:-1,y:1.43},{x:1,y:-1.43}];
+  new Chart(document.getElementById('pcaChart'),{
+    type:'scatter',
+    data:{datasets:[
+      {label:'Data Points',data:pts,backgroundColor:'rgba(26,45,90,0.6)',pointRadius:5},
+      {type:'line',label:'PC1 (max variance)',data:pc1,borderColor:'#c45c00',fill:false,pointRadius:0,borderWidth:3},
+      {type:'line',label:'PC2 (2nd variance)',data:pc2,borderColor:'#0d6e6e',fill:false,pointRadius:0,borderWidth:2,borderDash:[5,4]}
+    ]},
+    options:{plugins:{legend:{position:'top'}},scales:{x:{min:-5,max:5},y:{min:-4,max:4}}}
+  });
+}
+
+// VARIANCE CHART (scree plot)
+{
+  const varExp=[32,25,16,10,6,4,3,2,1.5,0.5];
+  const cumVar=varExp.reduce((a,v,i)=>[...a,(a[i-1]||0)+v],[]);
+  new Chart(document.getElementById('varianceChart'),{
+    type:'bar',
+    data:{
+      labels:range(1,10,1).map(i=>'PC'+i),
+      datasets:[
+        {label:'Variance Explained (%)',data:varExp,backgroundColor:'rgba(26,45,90,0.6)',borderColor:'#1a2d5a',borderWidth:2,borderRadius:4,yAxisID:'y'},
+        {type:'line',label:'Cumulative (%)',data:cumVar,borderColor:'#c45c00',fill:false,tension:0.3,pointRadius:5,borderWidth:2.5,yAxisID:'y'}
+      ]
+    },
+    options:{
+      plugins:{legend:{position:'top'}},
+      scales:{
+        y:{min:0,max:105,title:{display:true,text:'Variance Explained (%)'},ticks:{callback:v=>v+'%'}},
+        x:{title:{display:true,text:'Principal Component'}}
+      }
+    }
+  });
+}
+
+// ACTIVATION CHART
+{
+  const z=range(-4,4,0.1);
+  new Chart(document.getElementById('activationChart'),{
+    type:'line',
+    data:{labels:z,datasets:[
+      {label:'ReLU',data:z.map(x=>Math.max(0,x)),borderColor:'#0d6e6e',fill:false,tension:0,pointRadius:0,borderWidth:2.5},
+      {label:'Sigmoid',data:z.map(x=>1/(1+Math.exp(-x))),borderColor:'#1a2d5a',fill:false,tension:0.4,pointRadius:0,borderWidth:2},
+      {label:'Tanh',data:z.map(x=>Math.tanh(x)),borderColor:'#c45c00',fill:false,tension:0.4,pointRadius:0,borderWidth:2},
+      {label:'Linear',data:z.map(x=>Math.max(-2,Math.min(2,x*0.5))),borderColor:'#9a8f80',fill:false,tension:0,pointRadius:0,borderWidth:1.5,borderDash:[4,3]}
+    ]},
+    options:{plugins:{legend:{position:'top'}},scales:{x:{ticks:{maxTicksLimit:9}},y:{min:-1.5,max:1.5}}}
+  });
+}
+
+// GRADIENT DESCENT CHART
+{
+  const x=range(-3,3,0.1);
+  const loss=x.map(v=>v*v+1);
+  const path=[{x:2.8,y:2.8*2.8+1},{x:1.9,y:1.9*1.9+1},{x:1.2,y:1.2*1.2+1},{x:0.6,y:0.6*0.6+1},{x:0.2,y:0.2*0.2+1},{x:0.05,y:0.05*0.05+1}];
+  new Chart(document.getElementById('gdChart'),{
+    type:'scatter',
+    data:{datasets:[
+      {type:'line',label:'Loss Function',data:x.map((v,i)=>({x:v,y:loss[i]})),borderColor:'#1a2d5a',fill:false,tension:0.3,pointRadius:0,borderWidth:2.5},
+      {label:'Gradient Descent Path',data:path,backgroundColor:'#c45c00',pointRadius:8,showLine:true,borderColor:'#c45c00',borderWidth:2,borderDash:[4,3]}
+    ]},
+    options:{plugins:{legend:{position:'top'}},scales:{x:{min:-3.5,max:3.5,title:{display:true,text:'Weight Value'}},y:{min:0,max:10,title:{display:true,text:'Loss'}}}}
+  });
+}
+
+// LEARNING RATE CHART
+{
+  const iters=range(0,15,1);
+  const good=iters.map(i=>Math.max(0.05,5*Math.exp(-0.5*i)));
+  const small=iters.map(i=>Math.max(0.5,5-i*0.3));
+  const large=iters.map(i=>i%2===0?5-i*0.3+rng(-2,2):5-i*0.1+rng(-3,3));
+  new Chart(document.getElementById('lrChart'),{
+    type:'line',
+    data:{labels:iters.map(i=>'Step '+i),datasets:[
+      {label:'α too small',data:small,borderColor:'#9e1f3a',fill:false,tension:0.3,pointRadius:3,borderWidth:2},
+      {label:'α just right',data:good,borderColor:'#1a5c35',fill:false,tension:0.3,pointRadius:3,borderWidth:2.5},
+      {label:'α too large',data:large.map(v=>Math.max(0,Math.min(8,v))),borderColor:'#c45c00',fill:false,tension:0,pointRadius:3,borderWidth:2}
+    ]},
+    options:{plugins:{legend:{position:'top'}},scales:{y:{min:0,max:8,title:{display:true,text:'Loss'}},x:{ticks:{maxTicksLimit:8}}}}
+  });
+}
+
+// NAV
+function show(id){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
+  event.target.classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+</script>
+</body>
+</html>
