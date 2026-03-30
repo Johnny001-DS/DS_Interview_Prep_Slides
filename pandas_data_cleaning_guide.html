@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pandas Guide: Data Manipulation and Cleaning</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+:root {
+  --bg: #f6f3eb;
+  --surface: #fffdf8;
+  --surface-2: #f2ece0;
+  --border: #d7cfbf;
+  --ink: #1d1a15;
+  --ink-2: #4e473d;
+  --muted: #7c7265;
+  --teal: #196f63;
+  --teal-soft: rgba(25, 111, 99, 0.12);
+  --orange: #b85a0f;
+  --orange-soft: rgba(184, 90, 15, 0.14);
+  --navy: #1f3158;
+  --navy-soft: rgba(31, 49, 88, 0.12);
+  --olive: #46652b;
+  --olive-soft: rgba(70, 101, 43, 0.12);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Space Grotesk', sans-serif;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at 10% 0%, #ece3d4 0%, transparent 30%),
+    radial-gradient(circle at 90% 8%, #efe9dc 0%, transparent 28%),
+    var(--bg);
+  line-height: 1.7;
+}
+
+.hero {
+  background: linear-gradient(130deg, #1f2e2f 0%, #18242c 60%, #25353f 100%);
+  color: #f6f3eb;
+  padding: 56px 52px 44px;
+  border-bottom: 1px solid #3c4a4f;
+}
+
+.hero-tag {
+  font-family: 'IBM Plex Mono', monospace;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-size: 11px;
+  color: #8cc6be;
+  margin-bottom: 14px;
+}
+
+.hero h1 {
+  font-family: 'Instrument Serif', serif;
+  font-size: clamp(2rem, 4.3vw, 3.4rem);
+  line-height: 1.05;
+  margin-bottom: 10px;
+}
+
+.hero p {
+  color: #cdd6d0;
+  max-width: 74ch;
+}
+
+.hero-chips {
+  margin-top: 20px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.chip {
+  border: 1px solid #4f5f5f;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10.5px;
+  color: #d5dfda;
+}
+
+.nav {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 52px;
+  display: flex;
+  overflow-x: auto;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.nav-btn {
+  border: none;
+  border-bottom: 3px solid transparent;
+  background: transparent;
+  padding: 14px 16px;
+  color: var(--muted);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.nav-btn.active {
+  color: var(--teal);
+  border-bottom-color: var(--teal);
+}
+
+.nav-btn:hover { color: var(--ink); }
+
+.panel {
+  display: none;
+  width: min(1120px, 92vw);
+  margin: 0 auto;
+  padding: 44px 0 58px;
+}
+
+.panel.active { display: block; }
+
+.section-tag {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+
+.section-title {
+  font-family: 'Instrument Serif', serif;
+  font-size: clamp(1.7rem, 3.4vw, 2.6rem);
+  line-height: 1.12;
+  margin-bottom: 10px;
+}
+
+.section-title em { color: var(--teal); font-style: italic; }
+
+.section-desc {
+  color: var(--ink-2);
+  max-width: 76ch;
+  margin-bottom: 26px;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 28px 26px;
+  margin-bottom: 18px;
+}
+
+.card.teal { border-left: 4px solid var(--teal); }
+.card.orange { border-left: 4px solid var(--orange); }
+.card.navy { border-left: 4px solid var(--navy); }
+.card.olive { border-left: 4px solid var(--olive); }
+
+.card h3 {
+  font-family: 'Instrument Serif', serif;
+  font-size: 1.45rem;
+  margin-bottom: 10px;
+}
+
+.card p, .card li { color: var(--ink-2); }
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+@media (max-width: 860px) {
+  .hero { padding: 42px 22px 34px; }
+  .nav { padding: 0 14px; }
+  .panel { width: min(720px, 92vw); padding-top: 30px; }
+  .grid-2 { grid-template-columns: 1fr; }
+}
+
+.tile {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px 14px;
+}
+
+.tile-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.code {
+  margin-top: 12px;
+  border: 1px solid #2c3e43;
+  background: #111b1f;
+  border-radius: 10px;
+  overflow-x: auto;
+}
+
+.code code {
+  display: block;
+  white-space: pre;
+  padding: 14px 16px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12.5px;
+  color: #d4efe9;
+  line-height: 1.65;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+}
+
+.table th {
+  background: #202e35;
+  color: #f3f7f5;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  text-align: left;
+  padding: 10px 12px;
+  border: 1px solid #38464f;
+}
+
+.table td {
+  border: 1px solid var(--border);
+  padding: 10px 12px;
+  font-size: 14px;
+  vertical-align: top;
+}
+
+.steps {
+  margin-top: 10px;
+}
+
+.step {
+  border-bottom: 1px dashed var(--border);
+  padding: 12px 0;
+}
+
+.step:last-child { border-bottom: none; }
+
+.step strong { color: var(--ink); }
+
+.callout {
+  margin-top: 14px;
+  border-radius: 10px;
+  padding: 14px 16px;
+  border: 1px solid;
+}
+
+.callout.teal {
+  background: var(--teal-soft);
+  border-color: rgba(25, 111, 99, 0.22);
+}
+
+.callout.orange {
+  background: var(--orange-soft);
+  border-color: rgba(184, 90, 15, 0.25);
+}
+
+.callout.navy {
+  background: var(--navy-soft);
+  border-color: rgba(31, 49, 88, 0.25);
+}
+
+.callout.olive {
+  background: var(--olive-soft);
+  border-color: rgba(70, 101, 43, 0.24);
+}
+
+.small {
+  font-size: 13.5px;
+  color: var(--muted);
+}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-tag">Module 5 - Pandas for DS Interviews</div>
+  <h1>Pandas Guide for Data Manipulation and Cleaning</h1>
+  <p>
+    A practical, interview-ready path from beginner to intermediate Pandas. This module focuses on how to think,
+    what steps to follow, and how to execute robust data cleaning workflows.
+  </p>
+  <div class="hero-chips">
+    <span class="chip">DataFrames</span>
+    <span class="chip">Filtering and GroupBy</span>
+    <span class="chip">Merging and Reshaping</span>
+    <span class="chip">Missing Values</span>
+    <span class="chip">Type Fixes</span>
+    <span class="chip">End-to-End Cleaning</span>
+  </div>
+</div>
+
+<div class="nav">
+  <button class="nav-btn active" onclick="show(event, 'workflow')">01 Workflow</button>
+  <button class="nav-btn" onclick="show(event, 'basics')">02 Basics</button>
+  <button class="nav-btn" onclick="show(event, 'core')">03 Core Operations</button>
+  <button class="nav-btn" onclick="show(event, 'quality')">04 Missing Data and Types</button>
+  <button class="nav-btn" onclick="show(event, 'intermediate')">05 Intermediate Patterns</button>
+  <button class="nav-btn" onclick="show(event, 'checklist')">06 Cleaning Checklist</button>
+  <button class="nav-btn" onclick="show(event, 'case')">07 Full Case Study</button>
+</div>
+
+<div id="panel-workflow" class="panel active">
+  <div class="section-tag">Mindset First</div>
+  <h2 class="section-title">A Reliable Pandas <em>Workflow</em></h2>
+  <p class="section-desc">
+    Before writing code, define a repeatable flow. This prevents random trial-and-error and helps you present clearly in interviews.
+  </p>
+
+  <div class="card teal">
+    <h3>The 7-Step Mental Model</h3>
+    <div class="steps">
+      <div class="step"><strong>1. Load and profile</strong>: shape, dtypes, sample rows, null summary, duplicates.</div>
+      <div class="step"><strong>2. Standardize schema</strong>: column names, whitespace, casing, known category labels.</div>
+      <div class="step"><strong>3. Fix data types</strong>: parse dates, convert numeric text, set category types.</div>
+      <div class="step"><strong>4. Handle missing and invalids</strong>: drop or impute based on business logic.</div>
+      <div class="step"><strong>5. Handle outliers and inconsistencies</strong>: clip, winsorize, or flag.</div>
+      <div class="step"><strong>6. Transform and aggregate</strong>: feature engineering, grouping, pivots.</div>
+      <div class="step"><strong>7. Validate and export</strong>: assertions, sanity checks, save cleaned artifact.</div>
+    </div>
+  </div>
+
+  <div class="card navy">
+    <h3>Starter Audit Snippet</h3>
+    <div class="code"><code>import pandas as pd
+
+# Load
+raw = pd.read_csv("raw_data.csv")
+
+# Quick profile
+print(raw.shape)
+print(raw.head(3))
+print(raw.info())
+print(raw.isna().mean().sort_values(ascending=False).head(10))
+print("duplicates:", raw.duplicated().sum())</code></div>
+    <div class="callout navy small">Tip: Keep both <code>raw</code> and <code>df = raw.copy()</code> so you never lose the original data.</div>
+  </div>
+</div>
+
+<div id="panel-basics" class="panel">
+  <div class="section-tag">Beginner Level</div>
+  <h2 class="section-title">Pandas <em>Basics</em> You Should Master</h2>
+  <p class="section-desc">These operations should be muscle memory. Interview tasks often evaluate these first.</p>
+
+  <div class="grid-2">
+    <div class="card orange">
+      <h3>Select, Filter, Sort</h3>
+      <div class="code"><code># columns
+subset = df[["customer_id", "region", "monthly_spend"]]
+
+# rows (boolean filter)
+high_value = df[df["monthly_spend"] > 500]
+
+# multiple conditions
+active_us = df[(df["region"] == "north") & (df["churned"] == 0)]
+
+# sort
+latest = df.sort_values("signup_date", ascending=False)</code></div>
+    </div>
+
+    <div class="card teal">
+      <h3>Create / Update Columns</h3>
+      <div class="code"><code># simple transform
+df["spend_per_ticket"] = df["monthly_spend"] / df["tickets_last_30d"].replace(0, pd.NA)
+
+# conditional column
+df["value_band"] = pd.cut(
+    df["monthly_spend"],
+    bins=[0, 100, 500, 1_000, float("inf")],
+    labels=["low", "mid", "high", "vip"]
+)
+
+# rename
+df = df.rename(columns={"signup_date": "signup_dt"})</code></div>
+    </div>
+  </div>
+
+  <div class="card olive">
+    <h3>GroupBy Essentials</h3>
+    <div class="code"><code>summary = (
+    df.groupby("region", dropna=False)
+      .agg(
+          customers=("customer_id", "nunique"),
+          avg_spend=("monthly_spend", "mean"),
+          churn_rate=("churned", "mean")
+      )
+      .reset_index()
+)</code></div>
+  </div>
+</div>
+
+<div id="panel-core" class="panel">
+  <div class="section-tag">Core Data Manipulation</div>
+  <h2 class="section-title">Operations You Use <em>Every Day</em></h2>
+  <p class="section-desc">This is where most DS prep tasks live: joining tables, reshaping, and combining logic.</p>
+
+  <div class="card teal">
+    <h3>Merge and Join</h3>
+    <div class="code"><code># left join transactions to customers
+enriched = customers.merge(transactions, on="customer_id", how="left", validate="one_to_many")
+
+# safety check for join quality
+missing_txn = enriched["transaction_id"].isna().mean()
+print("rows with no transactions:", round(missing_txn, 3))</code></div>
+
+    <table class="table">
+      <thead>
+        <tr><th>Join Type</th><th>Use Case</th><th>Risk to Watch</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>left</td><td>Keep primary table intact</td><td>Nulls from missing matches</td></tr>
+        <tr><td>inner</td><td>Keep only matched keys</td><td>Silent row drops</td></tr>
+        <tr><td>outer</td><td>Data reconciliation</td><td>Unexpected row growth</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="grid-2">
+    <div class="card navy">
+      <h3>Pivot and Reshape</h3>
+      <div class="code"><code>pivot = (
+    df.pivot_table(
+        index="region",
+        columns="plan",
+        values="monthly_spend",
+        aggfunc="mean",
+        fill_value=0
+    )
+)
+
+long = pivot.reset_index().melt(id_vars="region", var_name="plan", value_name="avg_spend")</code></div>
+    </div>
+
+    <div class="card orange">
+      <h3>Method Chaining Pattern</h3>
+      <div class="code"><code>result = (
+    df
+    .query("monthly_spend >= 0")
+    .assign(signup_month=lambda x: pd.to_datetime(x["signup_date"]).dt.to_period("M"))
+    .groupby(["signup_month", "region"], as_index=False)
+    .agg(avg_spend=("monthly_spend", "mean"), users=("customer_id", "nunique"))
+    .sort_values(["signup_month", "avg_spend"], ascending=[True, False])
+)</code></div>
+    </div>
+  </div>
+</div>
+
+<div id="panel-quality" class="panel">
+  <div class="section-tag">Data Quality</div>
+  <h2 class="section-title">Missing Values and <em>Type Fixing</em></h2>
+  <p class="section-desc">Most real datasets fail here first. Strong cleaning skills separate good candidates from great ones.</p>
+
+  <div class="card orange">
+    <h3>Handle Missing Values Intentionally</h3>
+    <table class="table">
+      <thead>
+        <tr><th>Column Type</th><th>Typical Strategy</th><th>Example</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Numeric</td><td>Median imputation</td><td><code>df["monthly_spend"] = df["monthly_spend"].fillna(df["monthly_spend"].median())</code></td></tr>
+        <tr><td>Categorical</td><td>Mode or "unknown"</td><td><code>df["plan"] = df["plan"].fillna("unknown")</code></td></tr>
+        <tr><td>Date</td><td>Domain-based fill or keep missing</td><td>Do not blindly forward-fill</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card teal">
+    <h3>Convert Messy Strings to Numeric and Date</h3>
+    <div class="code"><code># Remove currency symbols and commas, then convert
+df["monthly_spend"] = (
+    df["monthly_spend"]
+      .astype(str)
+      .str.replace(r"[^0-9.-]", "", regex=True)
+      .replace("", pd.NA)
+      .pipe(pd.to_numeric, errors="coerce")
+)
+
+# Convert text counts to numeric
+df["tickets_last_30d"] = pd.to_numeric(df["tickets_last_30d"], errors="coerce")
+
+# Parse mixed date formats
+df["signup_date"] = pd.to_datetime(df["signup_date"], errors="coerce", utc=True)</code></div>
+
+    <div class="callout teal">
+      Keep <code>errors="coerce"</code> during first pass. It reveals bad values as <code>NaN</code> instead of crashing, so you can inspect and fix systematically.
+    </div>
+  </div>
+</div>
+
+<div id="panel-intermediate" class="panel">
+  <div class="section-tag">Intermediate Level</div>
+  <h2 class="section-title">Patterns for <em>Interview-Ready</em> Pandas</h2>
+  <p class="section-desc">These patterns show fluency and clean thinking under time pressure.</p>
+
+  <div class="grid-2">
+    <div class="card navy">
+      <h3>Window Functions</h3>
+      <div class="code"><code># Rolling 3-month spend trend per customer
+df = df.sort_values(["customer_id", "signup_date"])
+df["rolling_spend_3"] = (
+    df.groupby("customer_id")["monthly_spend"]
+      .transform(lambda s: s.rolling(3, min_periods=1).mean())
+)</code></div>
+    </div>
+
+    <div class="card olive">
+      <h3>Efficient Categories</h3>
+      <div class="code"><code>for col in ["region", "plan"]:
+    df[col] = df[col].astype("category")
+
+print(df.memory_usage(deep=True).sort_values(ascending=False).head(10))</code></div>
+    </div>
+  </div>
+
+  <div class="card teal">
+    <h3>Custom Cleaning Helper Functions</h3>
+    <div class="code"><code>def normalize_text(series: pd.Series) -> pd.Series:
+    return (
+        series.astype("string")
+              .str.strip()
+              .str.lower()
+              .str.replace(r"\s+", " ", regex=True)
+    )
+
+
+def cap_outliers(series: pd.Series, low=0.01, high=0.99) -> pd.Series:
+    lo, hi = series.quantile([low, high])
+    return series.clip(lo, hi)
+
+
+df["region"] = normalize_text(df["region"])
+df["monthly_spend"] = cap_outliers(df["monthly_spend"])</code></div>
+  </div>
+</div>
+
+<div id="panel-checklist" class="panel">
+  <div class="section-tag">What to Look For</div>
+  <h2 class="section-title">Data Cleaning <em>Checklist</em></h2>
+  <p class="section-desc">Use this order in your project and in interviews when explaining your approach.</p>
+
+  <div class="card orange">
+    <h3>Order of Operations</h3>
+    <div class="steps">
+      <div class="step"><strong>Schema checks</strong>: required columns, primary key uniqueness, row count baseline.</div>
+      <div class="step"><strong>Text normalization</strong>: trim, lowercase, unify labels and typos.</div>
+      <div class="step"><strong>Type conversion</strong>: numeric/date conversion with coercion and diagnostics.</div>
+      <div class="step"><strong>Missing value strategy</strong>: per-column treatment, not one-size-fits-all.</div>
+      <div class="step"><strong>Duplicate handling</strong>: exact row duplicates and duplicate IDs with tie-breakers.</div>
+      <div class="step"><strong>Outlier policy</strong>: remove, cap, or keep and flag.</div>
+      <div class="step"><strong>Feature creation</strong>: make analysis-friendly columns after cleaning.</div>
+      <div class="step"><strong>Validation</strong>: assertions for impossible values and null rates.</div>
+    </div>
+  </div>
+
+  <div class="card olive">
+    <h3>Validation Assertions</h3>
+    <div class="code"><code>assert df["customer_id"].isna().sum() == 0
+assert df["customer_id"].nunique() == len(df)
+assert (df["monthly_spend"] >= 0).all()
+assert set(df["churned"].dropna().unique()).issubset({0, 1})
+assert df["signup_date"].isna().mean() < 0.05</code></div>
+    <p class="small">These checks help you catch accidental corruption before modeling.</p>
+  </div>
+</div>
+
+<div id="panel-case" class="panel">
+  <div class="section-tag">End-to-End Practice</div>
+  <h2 class="section-title">Full Messy Dataset Cleaning <em>Walkthrough</em></h2>
+  <p class="section-desc">
+    Below is a deliberately messy mixed dataset with categorical and numeric fields. Then we clean it in proper production-style steps.
+  </p>
+
+  <div class="card navy">
+    <h3>Sample Messy CSV</h3>
+    <div class="code"><code>customer_id,signup_date,region,plan,monthly_spend,tickets_last_30d,churned,notes
+C001,2024-01-03, North ,Pro,"$1,200",3,0,first payment delayed
+C002,03/14/2024,south,basic,89.99,0,0,
+C003,2024/15/01,EAST,pro,499,2,1,bad date format
+C004,,west,Enterprise,"2,500",ten,0,missing signup date
+C005,2024-02-01,n/a,BASIC,,1,1,missing spend
+C005,2024-02-01,n/a,BASIC,,1,1,duplicate row
+C006,2024-04-11,South ,Pro,  799.5 , 4 ,No,boolean as text
+C007,2024-03-30,  east,trial,-25,2,0,negative spend invalid
+C008,2024-05-12,West,Enterprise,12000,1,0,possible outlier
+C009,2024-05-18,,Basic,45, ,1,missing region and tickets</code></div>
+  </div>
+
+  <div class="card teal">
+    <h3>Step-by-Step Cleaning Code</h3>
+    <div class="code"><code>import pandas as pd
+import numpy as np
+
+# 1) Load safely and preserve raw
+raw = pd.read_csv("messy_customers.csv")
+df = raw.copy()
+
+# 2) Standardize column names
+(df.columns)
+df.columns = (
+    df.columns
+      .str.strip()
+      .str.lower()
+      .str.replace(r"[^a-z0-9]+", "_", regex=True)
+      .str.strip("_")
+)
+
+# 3) Normalize text fields
+text_cols = ["customer_id", "region", "plan", "notes", "churned"]
+for c in text_cols:
+    df[c] = df[c].astype("string").str.strip()
+
+df["region"] = (
+    df["region"]
+      .str.lower()
+      .replace({"n/a": pd.NA, "na": pd.NA, "": pd.NA})
+)
+df["plan"] = df["plan"].str.lower().replace({"": pd.NA})
+
+# 4) Parse numerics (remove currency symbols, spaces, commas)
+for c in ["monthly_spend", "tickets_last_30d"]:
+    df[c] = (
+        df[c].astype("string")
+             .str.replace(r"[^0-9.-]", "", regex=True)
+             .replace("", pd.NA)
+             .pipe(pd.to_numeric, errors="coerce")
+    )
+
+# 5) Parse dates (mixed formats)
+df["signup_date"] = pd.to_datetime(df["signup_date"], errors="coerce", utc=True)
+
+# 6) Convert churned to binary
+churn_map = {"0": 0, "1": 1, "no": 0, "yes": 1, "false": 0, "true": 1}
+df["churned"] = df["churned"].str.lower().map(churn_map)
+
+# 7) Remove exact duplicates
+df = df.drop_duplicates()
+
+# 8) Basic validity rules
+df.loc[df["monthly_spend"] < 0, "monthly_spend"] = pd.NA
+
+# 9) Impute missing values (example policy)
+df["monthly_spend"] = df["monthly_spend"].fillna(df["monthly_spend"].median())
+df["tickets_last_30d"] = df["tickets_last_30d"].fillna(0)
+df["region"] = df["region"].fillna("unknown")
+df["plan"] = df["plan"].fillna("unknown")
+
+# 10) Outlier treatment: cap monthly_spend at 99th percentile
+cap_hi = df["monthly_spend"].quantile(0.99)
+df["monthly_spend"] = df["monthly_spend"].clip(upper=cap_hi)
+
+# 11) Feature engineering
+df["signup_day"] = df["signup_date"].dt.date
+df["spend_per_ticket"] = np.where(
+    df["tickets_last_30d"] > 0,
+    df["monthly_spend"] / df["tickets_last_30d"],
+    np.nan
+)
+
+# 12) Final type optimization
+for c in ["region", "plan"]:
+    df[c] = df[c].astype("category")
+
+df["tickets_last_30d"] = df["tickets_last_30d"].astype("int64")
+
+# 13) Validation checks
+assert df["customer_id"].isna().sum() == 0
+assert (df["monthly_spend"] >= 0).all()
+assert set(df["churned"].dropna().astype(int).unique()).issubset({0, 1})
+
+# 14) Save cleaned data
+df.to_csv("customers_cleaned.csv", index=False)</code></div>
+  </div>
+
+  <div class="card olive">
+    <h3>Why This Flow Works</h3>
+    <ul>
+      <li>It keeps original data intact and uses deterministic steps.</li>
+      <li>It separates parsing, validity rules, imputation, and feature engineering.</li>
+      <li>It includes explicit assertions so errors are caught early.</li>
+      <li>It ends with a clean artifact ready for EDA or modeling.</li>
+    </ul>
+    <div class="callout olive small">Practice this case twice and you will be able to explain a complete Pandas cleaning approach confidently in interviews.</div>
+  </div>
+</div>
+
+<script>
+function show(evt, id) {
+  document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(panel => panel.classList.remove('active'));
+  evt.currentTarget.classList.add('active');
+  document.getElementById('panel-' + id).classList.add('active');
+}
+</script>
+
+</body>
+</html>
