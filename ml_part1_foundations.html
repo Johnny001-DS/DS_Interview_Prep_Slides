@@ -248,6 +248,23 @@ body{
 .tbl td{padding:13px 16px;border:1px solid var(--border);font-size:14px;color:var(--ink2);vertical-align:top;}
 .tbl tr:hover td{background:var(--s2);}
 
+/* CODE DEMO */
+.code-demo{
+  background:#0b111a;
+  border:1px solid #1d2f47;
+  border-radius:10px;
+  padding:16px 18px;
+  margin:16px 0;
+  overflow-x:auto;
+}
+.code-demo code{
+  font-family:'JetBrains Mono',monospace;
+  font-size:12.8px;
+  color:#9ecbff;
+  line-height:1.75;
+  white-space:pre;
+}
+
 /* VERSUS */
 .versus{display:grid;grid-template-columns:1fr 60px 1fr;gap:16px;align-items:center;margin:18px 0;}
 .vs-mid{text-align:center;font-family:'Clash Display',sans-serif;font-size:22px;font-weight:700;color:var(--muted);}
@@ -967,6 +984,39 @@ li{margin:6px 0;}
       </div>
     </div>
   </div>
+
+  <div class="card teal-border">
+    <div class="card-title">Scikit-learn Implementation — Linear Regression (With Ridge/Lasso)</div>
+    <p>Use this as your quick interview template: train a baseline linear regression, then regularized variants.</p>
+    <pre class="code-demo"><code>from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression, Ridge, Lasso
+from sklearn.metrics import r2_score, mean_squared_error
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+lin = LinearRegression()
+lin.fit(X_train, y_train)
+y_pred = lin.predict(X_test)
+
+print("LinearRegression R2:", r2_score(y_test, y_pred))
+print("LinearRegression RMSE:", mean_squared_error(y_test, y_pred) ** 0.5)
+
+# Regularized versions
+ridge = Ridge(alpha=1.0).fit(X_train, y_train)
+lasso = Lasso(alpha=0.1).fit(X_train, y_train)</code></pre>
+
+    <table class="tbl">
+      <thead><tr><th>Model</th><th>Parameter</th><th>Default</th><th>What It Controls</th></tr></thead>
+      <tbody>
+        <tr><td>LinearRegression</td><td>fit_intercept</td><td>True</td><td>Adds intercept term (set False if data already centered).</td></tr>
+        <tr><td>LinearRegression</td><td>positive</td><td>False</td><td>Forces coefficients to be non-negative.</td></tr>
+        <tr><td>Ridge/Lasso</td><td>alpha</td><td>1.0</td><td>Regularization strength; higher value means stronger shrinkage.</td></tr>
+        <tr><td>Lasso</td><td>max_iter</td><td>1000</td><td>Optimization steps for convergence.</td></tr>
+      </tbody>
+    </table>
+  </div>
 </div>
 
 
@@ -1067,6 +1117,40 @@ li{margin:6px 0;}
       <div class="callout-tag">⚠️ Key Limitation</div>
       <p>Logistic regression produces linear decision boundaries. If your classes are not linearly separable (imagine two interleaved spirals), logistic regression will struggle. In that case, consider: kernel SVMs, decision trees, or neural networks. This is a common interview follow-up question.</p>
     </div>
+  </div>
+
+  <div class="card teal-border">
+    <div class="card-title">Scikit-learn Implementation — Logistic Regression</div>
+    <pre class="code-demo"><code>from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.pipeline import Pipeline
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import classification_report
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42, stratify=y
+)
+
+clf = Pipeline(steps=[
+    ("scaler", StandardScaler()),
+    ("model", LogisticRegression())
+])
+
+clf.fit(X_train, y_train)
+pred = clf.predict(X_test)
+proba = clf.predict_proba(X_test)[:, 1]
+print(classification_report(y_test, pred))</code></pre>
+
+    <table class="tbl">
+      <thead><tr><th>Parameter</th><th>Default</th><th>What It Controls</th></tr></thead>
+      <tbody>
+        <tr><td>penalty</td><td>"l2"</td><td>Regularization type ("l1", "l2", "elasticnet", None).</td></tr>
+        <tr><td>C</td><td>1.0</td><td>Inverse regularization strength; smaller C means stronger regularization.</td></tr>
+        <tr><td>solver</td><td>"lbfgs"</td><td>Optimizer; impacts support for penalty/multiclass modes.</td></tr>
+        <tr><td>max_iter</td><td>100</td><td>Max optimization iterations before stopping.</td></tr>
+        <tr><td>class_weight</td><td>None</td><td>Handles imbalance; set "balanced" for skewed classes.</td></tr>
+      </tbody>
+    </table>
   </div>
 </div>
 
@@ -1184,6 +1268,33 @@ li{margin:6px 0;}
       <p>Interviewers rarely ask you to use a single decision tree in practice — they exist mainly as building blocks for Random Forests and Gradient Boosting. The main reason to know single decision trees deeply: they introduce entropy, information gain, Gini — all concepts that carry over to ensemble methods.</p>
     </div>
   </div>
+
+  <div class="card teal-border">
+    <div class="card-title">Scikit-learn Implementation — Decision Tree</div>
+    <pre class="code-demo"><code>from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import accuracy_score
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42, stratify=y
+)
+
+tree = DecisionTreeClassifier(random_state=42)
+tree.fit(X_train, y_train)
+pred = tree.predict(X_test)
+print("Accuracy:", accuracy_score(y_test, pred))</code></pre>
+
+    <table class="tbl">
+      <thead><tr><th>Parameter</th><th>Default</th><th>What It Controls</th></tr></thead>
+      <tbody>
+        <tr><td>criterion</td><td>"gini"</td><td>Split quality metric ("gini" or "entropy").</td></tr>
+        <tr><td>max_depth</td><td>None</td><td>Tree depth limit; key anti-overfitting knob.</td></tr>
+        <tr><td>min_samples_split</td><td>2</td><td>Minimum samples required to split a node.</td></tr>
+        <tr><td>min_samples_leaf</td><td>1</td><td>Minimum samples in each leaf node.</td></tr>
+        <tr><td>max_features</td><td>None</td><td>Feature subset size considered at each split.</td></tr>
+      </tbody>
+    </table>
+  </div>
 </div>
 
 
@@ -1271,6 +1382,33 @@ li{margin:6px 0;}
         <tr><td>Training speed</td><td style="color:var(--green);">Fast</td><td style="color:var(--amber);">Slower — trains hundreds of trees</td></tr>
         <tr><td>Prediction performance</td><td style="color:var(--amber);">Decent on training, poor on new data</td><td style="color:var(--green);">Strong generalization</td></tr>
         <tr><td>Feature importance</td><td style="color:var(--amber);">Available but unreliable</td><td style="color:var(--green);">Stable and reliable</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card teal-border">
+    <div class="card-title">Scikit-learn Implementation — Random Forest</div>
+    <pre class="code-demo"><code>from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import roc_auc_score
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42, stratify=y
+)
+
+rf = RandomForestClassifier(random_state=42)
+rf.fit(X_train, y_train)
+proba = rf.predict_proba(X_test)[:, 1]
+print("ROC-AUC:", roc_auc_score(y_test, proba))</code></pre>
+
+    <table class="tbl">
+      <thead><tr><th>Parameter</th><th>Default</th><th>What It Controls</th></tr></thead>
+      <tbody>
+        <tr><td>n_estimators</td><td>100</td><td>Number of trees in the forest.</td></tr>
+        <tr><td>max_features</td><td>"sqrt"</td><td>Number of features considered per split.</td></tr>
+        <tr><td>max_depth</td><td>None</td><td>Maximum depth of each tree.</td></tr>
+        <tr><td>bootstrap</td><td>True</td><td>Whether trees train on bootstrap samples.</td></tr>
+        <tr><td>min_samples_leaf</td><td>1</td><td>Minimum samples per leaf to reduce overfitting.</td></tr>
       </tbody>
     </table>
   </div>
@@ -1366,6 +1504,33 @@ li{margin:6px 0;}
       <p><strong>"Compare and contrast gradient boosting and random forests."</strong></p>
       <p style="margin-top:10px;"><strong>Model answer:</strong> "Both use ensembles of decision trees. Random forests train trees in parallel on bootstrap samples — each tree is independent, and they're averaged. This reduces variance. Gradient boosting trains trees sequentially — each tree corrects the errors of the previous ensemble. This reduces bias. In practice, gradient boosting (especially XGBoost) often achieves better performance on tabular data, but is more prone to overfitting and requires careful tuning of learning rate and number of trees. Random forests are more robust, faster to train, and a better starting point for quick baselines."</p>
     </div>
+  </div>
+
+  <div class="card teal-border">
+    <div class="card-title">Scikit-learn Implementation — Gradient Boosting</div>
+    <pre class="code-demo"><code>from sklearn.model_selection import train_test_split
+from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.metrics import accuracy_score
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42, stratify=y
+)
+
+gb = GradientBoostingClassifier(random_state=42)
+gb.fit(X_train, y_train)
+pred = gb.predict(X_test)
+print("Accuracy:", accuracy_score(y_test, pred))</code></pre>
+
+    <table class="tbl">
+      <thead><tr><th>Parameter</th><th>Default</th><th>What It Controls</th></tr></thead>
+      <tbody>
+        <tr><td>n_estimators</td><td>100</td><td>Number of boosting stages (trees).</td></tr>
+        <tr><td>learning_rate</td><td>0.1</td><td>Shrinks each tree's contribution; lower usually needs more trees.</td></tr>
+        <tr><td>max_depth</td><td>3</td><td>Depth of each weak learner tree.</td></tr>
+        <tr><td>subsample</td><td>1.0</td><td>Fraction of samples per tree (less than 1.0 adds stochasticity).</td></tr>
+        <tr><td>min_samples_leaf</td><td>1</td><td>Minimum samples in leaf nodes.</td></tr>
+      </tbody>
+    </table>
   </div>
 </div>
 

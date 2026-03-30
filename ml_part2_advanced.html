@@ -128,6 +128,23 @@ body{background:var(--bg);color:var(--ink);font-family:'Space Grotesk',sans-seri
 .tbl td{padding:13px 16px;border:1px solid var(--border);font-size:14px;color:var(--ink2);vertical-align:top;}
 .tbl tr:hover td{background:var(--s2);}
 
+/* CODE DEMO */
+.code-demo{
+  background:#111922;
+  border:1px solid #2a3a4f;
+  border-radius:10px;
+  padding:16px 18px;
+  margin:16px 0;
+  overflow-x:auto;
+}
+.code-demo code{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:12.8px;
+  color:#d4e3ff;
+  line-height:1.75;
+  white-space:pre;
+}
+
 /* QUOTE */
 .quote{border-left:4px solid var(--violet);padding:16px 22px;background:var(--violet-s);border-radius:0 10px 10px 0;margin:18px 0;}
 .quote p{font-family:'Instrument Serif',serif;font-size:19px;font-style:italic;color:var(--ink);line-height:1.5;}
@@ -297,6 +314,39 @@ li{margin:6px 0;}
       </tbody>
     </table>
   </div>
+
+  <div class="card teal">
+    <div class="card-title">Scikit-learn Implementation — SVM (SVC)</div>
+    <pre class="code-demo"><code>from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.pipeline import Pipeline
+from sklearn.svm import SVC
+from sklearn.metrics import classification_report
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42, stratify=y
+)
+
+svm_clf = Pipeline(steps=[
+    ("scaler", StandardScaler()),
+    ("model", SVC())
+])
+
+svm_clf.fit(X_train, y_train)
+pred = svm_clf.predict(X_test)
+print(classification_report(y_test, pred))</code></pre>
+
+    <table class="tbl">
+      <thead><tr><th>Parameter</th><th>Default</th><th>What It Controls</th></tr></thead>
+      <tbody>
+        <tr><td>C</td><td>1.0</td><td>Margin softness; larger C fits training data harder.</td></tr>
+        <tr><td>kernel</td><td>"rbf"</td><td>Decision boundary type ("linear", "rbf", "poly", "sigmoid").</td></tr>
+        <tr><td>gamma</td><td>"scale"</td><td>Influence radius of each point for non-linear kernels.</td></tr>
+        <tr><td>degree</td><td>3</td><td>Polynomial degree when using `kernel="poly"`.</td></tr>
+        <tr><td>probability</td><td>False</td><td>Enable calibrated probabilities via `predict_proba`.</td></tr>
+      </tbody>
+    </table>
+  </div>
 </div>
 
 
@@ -402,6 +452,32 @@ li{margin:6px 0;}
       <p><strong>"Compare and contrast Gaussian Naive Bayes and logistic regression."</strong></p>
       <p style="margin-top:10px;">Key answer: "Both produce linear decision boundaries. NB is a generative model — it models P(X|Y) and P(Y) to infer P(Y|X). Logistic regression is discriminative — it directly models P(Y|X). NB needs very little data but makes strong independence assumptions that are usually violated. Logistic regression is more flexible but needs more training data and an optimization step. In practice: use NB when data is scarce or features are roughly independent (like words); use logistic regression when features are correlated and you have enough data."</p>
     </div>
+  </div>
+
+  <div class="card teal">
+    <div class="card-title">Scikit-learn Implementation — Naive Bayes</div>
+    <pre class="code-demo"><code>from sklearn.model_selection import train_test_split
+from sklearn.naive_bayes import GaussianNB
+from sklearn.metrics import accuracy_score
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42, stratify=y
+)
+
+nb = GaussianNB()
+nb.fit(X_train, y_train)
+pred = nb.predict(X_test)
+print("Accuracy:", accuracy_score(y_test, pred))</code></pre>
+
+    <table class="tbl">
+      <thead><tr><th>Estimator</th><th>Parameter</th><th>Default</th><th>What It Controls</th></tr></thead>
+      <tbody>
+        <tr><td>GaussianNB</td><td>var_smoothing</td><td>1e-9</td><td>Stability term added to variance to avoid divide-by-zero.</td></tr>
+        <tr><td>MultinomialNB</td><td>alpha</td><td>1.0</td><td>Laplace smoothing strength (for count features like text).</td></tr>
+        <tr><td>MultinomialNB</td><td>fit_prior</td><td>True</td><td>Learn class priors from data instead of uniform priors.</td></tr>
+        <tr><td>MultinomialNB</td><td>class_prior</td><td>None</td><td>Manual class priors (used when domain priors are known).</td></tr>
+      </tbody>
+    </table>
   </div>
 </div>
 
@@ -515,6 +591,30 @@ li{margin:6px 0;}
       <strong>Credit card companies:</strong> Cluster transactions → identify unusual spending patterns (fraud detection).</p>
     </div>
   </div>
+
+  <div class="card teal">
+    <div class="card-title">Scikit-learn Implementation — K-Means</div>
+    <pre class="code-demo"><code>from sklearn.cluster import KMeans
+from sklearn.metrics import silhouette_score
+
+kmeans = KMeans(n_clusters=3, random_state=42)
+labels = kmeans.fit_predict(X)
+
+print("Inertia:", kmeans.inertia_)
+print("Silhouette:", silhouette_score(X, labels))
+print("Centroids:", kmeans.cluster_centers_)</code></pre>
+
+    <table class="tbl">
+      <thead><tr><th>Parameter</th><th>Default</th><th>What It Controls</th></tr></thead>
+      <tbody>
+        <tr><td>n_clusters</td><td>8</td><td>Number of clusters (k).</td></tr>
+        <tr><td>init</td><td>"k-means++"</td><td>Centroid initialization strategy.</td></tr>
+        <tr><td>n_init</td><td>"auto"</td><td>How many random starts to run and choose the best from.</td></tr>
+        <tr><td>max_iter</td><td>300</td><td>Maximum iterations for one run.</td></tr>
+        <tr><td>tol</td><td>1e-4</td><td>Convergence threshold (smaller means stricter convergence).</td></tr>
+      </tbody>
+    </table>
+  </div>
 </div>
 
 
@@ -601,6 +701,30 @@ li{margin:6px 0;}
       <strong>3. Loss of interpretability</strong> — principal components are linear combinations of original features. "PC1" doesn't mean anything to a business stakeholder the way "age" or "income" does.<br>
       <strong>4. Only works on numerical features</strong> — must encode categoricals before applying PCA.</p>
     </div>
+  </div>
+
+  <div class="card teal">
+    <div class="card-title">Scikit-learn Implementation — PCA</div>
+    <pre class="code-demo"><code>from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
+
+X_scaled = StandardScaler().fit_transform(X)
+pca = PCA(n_components=0.95, random_state=42)
+X_reduced = pca.fit_transform(X_scaled)
+
+print("Original shape:", X.shape)
+print("Reduced shape:", X_reduced.shape)
+print("Explained variance ratio:", pca.explained_variance_ratio_)</code></pre>
+
+    <table class="tbl">
+      <thead><tr><th>Parameter</th><th>Default</th><th>What It Controls</th></tr></thead>
+      <tbody>
+        <tr><td>n_components</td><td>None</td><td>Number (or variance fraction) of components to keep.</td></tr>
+        <tr><td>svd_solver</td><td>"auto"</td><td>SVD strategy chosen based on data shape.</td></tr>
+        <tr><td>whiten</td><td>False</td><td>Scales principal components to unit variance.</td></tr>
+        <tr><td>random_state</td><td>None</td><td>Reproducibility for randomized solver modes.</td></tr>
+      </tbody>
+    </table>
   </div>
 </div>
 
@@ -731,6 +855,38 @@ li{margin:6px 0;}
       </div>
     </div>
   </div>
+
+  <div class="card teal">
+    <div class="card-title">Scikit-learn Implementation — Neural Network (MLPClassifier)</div>
+    <pre class="code-demo"><code>from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.pipeline import Pipeline
+from sklearn.neural_network import MLPClassifier
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42, stratify=y
+)
+
+mlp = Pipeline(steps=[
+    ("scaler", StandardScaler()),
+    ("model", MLPClassifier(random_state=42))
+])
+
+mlp.fit(X_train, y_train)
+print("Test accuracy:", mlp.score(X_test, y_test))</code></pre>
+
+    <table class="tbl">
+      <thead><tr><th>Parameter</th><th>Default</th><th>What It Controls</th></tr></thead>
+      <tbody>
+        <tr><td>hidden_layer_sizes</td><td>(100,)</td><td>Network shape (neurons per hidden layer).</td></tr>
+        <tr><td>activation</td><td>"relu"</td><td>Hidden layer activation function.</td></tr>
+        <tr><td>solver</td><td>"adam"</td><td>Optimizer used for training.</td></tr>
+        <tr><td>alpha</td><td>0.0001</td><td>L2 regularization strength.</td></tr>
+        <tr><td>learning_rate_init</td><td>0.001</td><td>Initial step size for optimization.</td></tr>
+        <tr><td>max_iter</td><td>200</td><td>Maximum training epochs.</td></tr>
+      </tbody>
+    </table>
+  </div>
 </div>
 
 
@@ -823,6 +979,28 @@ li{margin:6px 0;}
       </tbody>
     </table>
   </div>
+
+  <div class="card teal">
+    <div class="card-title">Scikit-learn Implementation Hook — Activation Choices in MLP</div>
+    <pre class="code-demo"><code>from sklearn.neural_network import MLPClassifier
+
+# Try different hidden-layer activations
+relu_net = MLPClassifier(activation="relu", random_state=42)
+tanh_net = MLPClassifier(activation="tanh", random_state=42)
+log_net = MLPClassifier(activation="logistic", random_state=42)
+
+# For multiclass, sklearn automatically uses softmax output internally.
+# For binary, it uses a logistic-style output.</code></pre>
+
+    <table class="tbl">
+      <thead><tr><th>Parameter</th><th>Default</th><th>What It Controls</th></tr></thead>
+      <tbody>
+        <tr><td>activation</td><td>"relu"</td><td>Hidden-layer nonlinearity ("relu", "tanh", "logistic", "identity").</td></tr>
+        <tr><td>alpha</td><td>0.0001</td><td>Regularization that can stabilize deep nets.</td></tr>
+        <tr><td>hidden_layer_sizes</td><td>(100,)</td><td>Larger/deeper hidden layers often need stronger regularization.</td></tr>
+      </tbody>
+    </table>
+  </div>
 </div>
 
 
@@ -904,6 +1082,34 @@ li{margin:6px 0;}
         </div>
       </div>
     </div>
+  </div>
+
+  <div class="card teal">
+    <div class="card-title">Scikit-learn Implementation Hook — Backprop/Training Controls (MLP)</div>
+    <pre class="code-demo"><code>from sklearn.neural_network import MLPClassifier
+
+model = MLPClassifier(
+    solver="adam",
+    batch_size="auto",
+    learning_rate="constant",
+    learning_rate_init=0.001,
+    early_stopping=False,
+    max_iter=200,
+    random_state=42
+)
+model.fit(X_train, y_train)</code></pre>
+
+    <table class="tbl">
+      <thead><tr><th>Parameter</th><th>Default</th><th>What It Controls</th></tr></thead>
+      <tbody>
+        <tr><td>solver</td><td>"adam"</td><td>Optimizer used during backprop updates.</td></tr>
+        <tr><td>batch_size</td><td>"auto"</td><td>Mini-batch size (auto uses min(200, n_samples)).</td></tr>
+        <tr><td>learning_rate</td><td>"constant"</td><td>Schedule strategy for SGD optimizer.</td></tr>
+        <tr><td>learning_rate_init</td><td>0.001</td><td>Initial learning rate.</td></tr>
+        <tr><td>early_stopping</td><td>False</td><td>Stops training when validation score stops improving.</td></tr>
+        <tr><td>max_iter</td><td>200</td><td>Upper bound on epochs.</td></tr>
+      </tbody>
+    </table>
   </div>
 </div>
 
@@ -989,6 +1195,37 @@ li{margin:6px 0;}
         <p style="font-size:13.5px;margin-top:6px;">Overshoots the minimum. Loss oscillates wildly or even increases. Training diverges. Model never learns.</p>
       </div>
     </div>
+  </div>
+
+  <div class="card teal">
+    <div class="card-title">Scikit-learn Implementation — Gradient Descent Family (SGDClassifier)</div>
+    <pre class="code-demo"><code>from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.pipeline import make_pipeline
+from sklearn.linear_model import SGDClassifier
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42, stratify=y
+)
+
+sgd = make_pipeline(
+    StandardScaler(),
+    SGDClassifier(random_state=42)
+)
+sgd.fit(X_train, y_train)
+print("Test accuracy:", sgd.score(X_test, y_test))</code></pre>
+
+    <table class="tbl">
+      <thead><tr><th>Parameter</th><th>Default</th><th>What It Controls</th></tr></thead>
+      <tbody>
+        <tr><td>loss</td><td>"hinge"</td><td>Objective function (SVM hinge, logistic, modified_huber, etc.).</td></tr>
+        <tr><td>penalty</td><td>"l2"</td><td>Regularization type.</td></tr>
+        <tr><td>alpha</td><td>0.0001</td><td>Regularization strength.</td></tr>
+        <tr><td>learning_rate</td><td>"optimal"</td><td>Learning rate schedule.</td></tr>
+        <tr><td>eta0</td><td>0.0</td><td>Initial learning rate for schedules that use explicit eta0.</td></tr>
+        <tr><td>max_iter</td><td>1000</td><td>Maximum passes over data.</td></tr>
+      </tbody>
+    </table>
   </div>
 </div>
 
